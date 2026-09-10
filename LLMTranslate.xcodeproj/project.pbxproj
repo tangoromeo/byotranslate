@@ -7,13 +7,60 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B79EFB61F835223F9886A18 /* LLMTranslateKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		118A4285BFEC6A08EC662589 /* TranslationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC73BEDF0D7C23FAD93AA3D7 /* TranslationRequest.swift */; };
 		155AF487F96631B09348F3CF /* LLMTranslateTextExt.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 5331BF8BE9942A161FEE4B3D /* LLMTranslateTextExt.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		288F7BE65BD18229448F56A3 /* ResponseSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1AB3C52C951EB946786772 /* ResponseSanitizer.swift */; };
+		2BD67B44B952D1EDFD8D338D /* ResponseSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD8AFF3F8ACE381B522738 /* ResponseSanitizerTests.swift */; };
+		4A7664DBF8A25FCCB582BA0A /* OpenAISSEParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D6E1492091E44C8937E929 /* OpenAISSEParsingTests.swift */; };
+		4BD0E72F0BAB9D0DE026BE1A /* LanguagePairResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF9DA30F53E6FB78973256D8 /* LanguagePairResolverTests.swift */; };
 		6DD00BE963ACD73B1FB67594 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B93A6C54D21EF37F5F8C1C91 /* ContentView.swift */; };
+		6F69C01D34D9004C3E1E9810 /* LLMTranslateKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; };
+		82C5E2AB3659967D49E9AD70 /* LLMTranslateKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; };
+		933350A71F8C9ABF5A012940 /* SharedIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */; };
+		9376B93D534B1180134E3F78 /* PromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8751E1D96EAE562E478F1451 /* PromptBuilder.swift */; };
+		9487ABB06B88097185B852C9 /* LocalLanguageDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */; };
+		9CD50CE38A6B82E6A02B4321 /* TranslationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */; };
+		9D6734B2C99D916A30C27C38 /* OpenAICompatibleProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C2963634E793E7E4B577E50 /* OpenAICompatibleProvider.swift */; };
+		A0CA8CB42463CC286861E178 /* LLMTranslateKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; };
+		AAABCE2B55FDCDEBDCE67513 /* TranslationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB783F4D1ACD64CB41A91C0 /* TranslationError.swift */; };
+		AADCEBE11C0DE1448E923057 /* LanguagePairResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F057DCCADC682137DB983 /* LanguagePairResolver.swift */; };
 		AC5A6D78A011DF93C66BE8CF /* LLMTranslateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AAF72A9E0846E855FB9E5E /* LLMTranslateApp.swift */; };
 		B647DE51F94501E07A345318 /* TranslateExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */; };
+		C5E6A21A3E5E56A7BFA47235 /* ProviderID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E59DB2AF723934D934CD5AC /* ProviderID.swift */; };
+		C65A9B117693B9A72F6BE605 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF41FD0A4B6670AD9EBFAF47 /* SettingsView.swift */; };
+		C8315A9019FD16A2B6AA59D7 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B25D92987790000A59057F /* KeychainStore.swift */; };
+		CC348C51CE4FB69E618D29B0 /* KeychainStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC076123478CA0FE5CFDB527 /* KeychainStoreTests.swift */; };
+		D2C44A516CDCF8070EC4D6B1 /* SSELineAssembler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B499903D30C770750E10267 /* SSELineAssembler.swift */; };
+		DA6D5826749C850BF6251B62 /* LLMTranslateKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E6685F9F9F335C65C20AD28F /* LLMTranslateSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4768ACEBC356362820BD6700 /* LLMTranslateSettings.swift */; };
+		EE6BFF6E9A180CDF09C99A4E /* ErrorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C79511DE472363A31667EE /* ErrorMappingTests.swift */; };
+		FC97C3ADBF5112A5A31AB953 /* OpenAIStreamEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BB0D693A3D358EF653D621 /* OpenAIStreamEvent.swift */; };
+		FD21BB9F1056307224D30C45 /* ModelDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3E4E4AB469A92B34B005ED /* ModelDescriptor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		58421CF25BA6300CF1F31EE5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F05B66213C7E5D198DF1CF85;
+			remoteInfo = LLMTranslateKit;
+		};
+		62833AE9E2FA4C165BE4B2C9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F05B66213C7E5D198DF1CF85;
+			remoteInfo = LLMTranslateKit;
+		};
+		B12CABC931499A357B718EE3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F05B66213C7E5D198DF1CF85;
+			remoteInfo = LLMTranslateKit;
+		};
 		EEAABEEC7D885E2BD6C3FD8E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
@@ -24,6 +71,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		8511A4666556D9D607C215E1 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DA6D5826749C850BF6251B62 /* LLMTranslateKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		98DD6B8621192D7E6F818698 /* Embed ExtensionKit Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -35,21 +93,142 @@
 			name = "Embed ExtensionKit Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E13932A01C0F107D4B42DF86 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				0B79EFB61F835223F9886A18 /* LLMTranslateKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationProvider.swift; sourceTree = "<group>"; };
+		1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLanguageDetector.swift; sourceTree = "<group>"; };
+		1C2963634E793E7E4B577E50 /* OpenAICompatibleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAICompatibleProvider.swift; sourceTree = "<group>"; };
+		1E1AB3C52C951EB946786772 /* ResponseSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSanitizer.swift; sourceTree = "<group>"; };
+		1E59DB2AF723934D934CD5AC /* ProviderID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderID.swift; sourceTree = "<group>"; };
+		336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedIdentifiers.swift; sourceTree = "<group>"; };
+		4768ACEBC356362820BD6700 /* LLMTranslateSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMTranslateSettings.swift; sourceTree = "<group>"; };
 		52AAF72A9E0846E855FB9E5E /* LLMTranslateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMTranslateApp.swift; sourceTree = "<group>"; };
 		5331BF8BE9942A161FEE4B3D /* LLMTranslateTextExt.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = LLMTranslateTextExt.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5F3E4E4AB469A92B34B005ED /* ModelDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDescriptor.swift; sourceTree = "<group>"; };
+		7B499903D30C770750E10267 /* SSELineAssembler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSELineAssembler.swift; sourceTree = "<group>"; };
+		7C94AF28F595FE71A9515E99 /* LLMTranslateKitTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LLMTranslateKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8751E1D96EAE562E478F1451 /* PromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptBuilder.swift; sourceTree = "<group>"; };
+		8B7F057DCCADC682137DB983 /* LanguagePairResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePairResolver.swift; sourceTree = "<group>"; };
+		9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LLMTranslateKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2B25D92987790000A59057F /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		B93A6C54D21EF37F5F8C1C91 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateExtension.swift; sourceTree = "<group>"; };
 		CD986FE554F421EB969123E3 /* LLMTranslate.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LLMTranslate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0BD8AFF3F8ACE381B522738 /* ResponseSanitizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSanitizerTests.swift; sourceTree = "<group>"; };
+		D6BB0D693A3D358EF653D621 /* OpenAIStreamEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIStreamEvent.swift; sourceTree = "<group>"; };
+		DC73BEDF0D7C23FAD93AA3D7 /* TranslationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationRequest.swift; sourceTree = "<group>"; };
+		DFB783F4D1ACD64CB41A91C0 /* TranslationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationError.swift; sourceTree = "<group>"; };
+		E4D6E1492091E44C8937E929 /* OpenAISSEParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAISSEParsingTests.swift; sourceTree = "<group>"; };
+		E7C79511DE472363A31667EE /* ErrorMappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMappingTests.swift; sourceTree = "<group>"; };
+		FC076123478CA0FE5CFDB527 /* KeychainStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStoreTests.swift; sourceTree = "<group>"; };
+		FF41FD0A4B6670AD9EBFAF47 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FF9DA30F53E6FB78973256D8 /* LanguagePairResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePairResolverTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		272705C8951D6DC29713DDB8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				82C5E2AB3659967D49E9AD70 /* LLMTranslateKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6053393A88AEE31462AFEB0C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0CA8CB42463CC286861E178 /* LLMTranslateKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A4ADE75D348E25D4F890BFEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6F69C01D34D9004C3E1E9810 /* LLMTranslateKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		0053A443A5F760FC228D526F /* Keychain */ = {
+			isa = PBXGroup;
+			children = (
+				B2B25D92987790000A59057F /* KeychainStore.swift */,
+			);
+			path = Keychain;
+			sourceTree = "<group>";
+		};
+		02EDC3E542A3D3E3651B6C87 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */,
+			);
+			name = Sources;
+			path = LLMTranslateTextExt/Sources;
+			sourceTree = "<group>";
+		};
+		179F06EB6E800F88EBF5E2FB /* Language */ = {
+			isa = PBXGroup;
+			children = (
+				8B7F057DCCADC682137DB983 /* LanguagePairResolver.swift */,
+				1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */,
+			);
+			path = Language;
+			sourceTree = "<group>";
+		};
+		60D27FAA38264C2875740D57 /* LLMTranslateKitTests */ = {
+			isa = PBXGroup;
+			children = (
+				E7C79511DE472363A31667EE /* ErrorMappingTests.swift */,
+				FC076123478CA0FE5CFDB527 /* KeychainStoreTests.swift */,
+				FF9DA30F53E6FB78973256D8 /* LanguagePairResolverTests.swift */,
+				E4D6E1492091E44C8937E929 /* OpenAISSEParsingTests.swift */,
+				D0BD8AFF3F8ACE381B522738 /* ResponseSanitizerTests.swift */,
+			);
+			path = LLMTranslateKitTests;
+			sourceTree = "<group>";
+		};
+		6F19B0167A2FF537363CDE24 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5F3E4E4AB469A92B34B005ED /* ModelDescriptor.swift */,
+				1E59DB2AF723934D934CD5AC /* ProviderID.swift */,
+				DC73BEDF0D7C23FAD93AA3D7 /* TranslationRequest.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		719F4DA3230F18EF1DBA08D2 /* OpenAI */ = {
+			isa = PBXGroup;
+			children = (
+				1C2963634E793E7E4B577E50 /* OpenAICompatibleProvider.swift */,
+				D6BB0D693A3D358EF653D621 /* OpenAIStreamEvent.swift */,
+				7B499903D30C770750E10267 /* SSELineAssembler.swift */,
+			);
+			path = OpenAI;
+			sourceTree = "<group>";
+		};
 		8AF449B7B4844C2FF29E42C6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				CD986FE554F421EB969123E3 /* LLMTranslate.app */,
+				9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */,
+				7C94AF28F595FE71A9515E99 /* LLMTranslateKitTests.xctest */,
 				5331BF8BE9942A161FEE4B3D /* LLMTranslateTextExt.appex */,
 			);
 			name = Products;
@@ -58,10 +237,29 @@
 		9315E2FFACB87DF0192B9E1F = {
 			isa = PBXGroup;
 			children = (
+				60D27FAA38264C2875740D57 /* LLMTranslateKitTests */,
 				BA44359F0E391F52B4F221DD /* Sources */,
 				E1FC92C695F15A13E29C19ED /* Sources */,
+				02EDC3E542A3D3E3651B6C87 /* Sources */,
 				8AF449B7B4844C2FF29E42C6 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		97FE4B84F0EEA3C265171A6B /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				4768ACEBC356362820BD6700 /* LLMTranslateSettings.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A031DC6C84C2C0973838A895 /* Prompting */ = {
+			isa = PBXGroup;
+			children = (
+				8751E1D96EAE562E478F1451 /* PromptBuilder.swift */,
+				1E1AB3C52C951EB946786772 /* ResponseSanitizer.swift */,
+			);
+			path = Prompting;
 			sourceTree = "<group>";
 		};
 		BA44359F0E391F52B4F221DD /* Sources */ = {
@@ -69,18 +267,35 @@
 			children = (
 				B93A6C54D21EF37F5F8C1C91 /* ContentView.swift */,
 				52AAF72A9E0846E855FB9E5E /* LLMTranslateApp.swift */,
+				FF41FD0A4B6670AD9EBFAF47 /* SettingsView.swift */,
 			);
 			name = Sources;
 			path = LLMTranslate/Sources;
 			sourceTree = "<group>";
 		};
+		C715E9BD91F9E383BE03B940 /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				719F4DA3230F18EF1DBA08D2 /* OpenAI */,
+			);
+			path = Providers;
+			sourceTree = "<group>";
+		};
 		E1FC92C695F15A13E29C19ED /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */,
+				336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */,
+				DFB783F4D1ACD64CB41A91C0 /* TranslationError.swift */,
+				117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */,
+				0053A443A5F760FC228D526F /* Keychain */,
+				179F06EB6E800F88EBF5E2FB /* Language */,
+				6F19B0167A2FF537363CDE24 /* Models */,
+				A031DC6C84C2C0973838A895 /* Prompting */,
+				C715E9BD91F9E383BE03B940 /* Providers */,
+				97FE4B84F0EEA3C265171A6B /* Settings */,
 			);
 			name = Sources;
-			path = LLMTranslateTextExt/Sources;
+			path = LLMTranslateKit/Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -91,12 +306,16 @@
 			buildConfigurationList = FEBC966DAE5E9F7BCA1E27CB /* Build configuration list for PBXNativeTarget "LLMTranslate" */;
 			buildPhases = (
 				EE03CBEEAC32B3F46DAC92E8 /* Sources */,
+				272705C8951D6DC29713DDB8 /* Frameworks */,
 				98DD6B8621192D7E6F818698 /* Embed ExtensionKit Extensions */,
+				E13932A01C0F107D4B42DF86 /* Embed Frameworks */,
+				071EC37E06103855E3160A04 /* Добавить translation-ui-provider.network-access в Info.plist */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				89C3B55C01D964414CE8745E /* PBXTargetDependency */,
+				6D5A95E3BB6F0BCD243BD63D /* PBXTargetDependency */,
 			);
 			name = LLMTranslate;
 			packageProductDependencies = (
@@ -110,10 +329,12 @@
 			buildConfigurationList = D31FC324DFA4F2E1FCF865AE /* Build configuration list for PBXNativeTarget "LLMTranslateTextExt" */;
 			buildPhases = (
 				AB86FF439A3F072F552D7EF8 /* Sources */,
+				6053393A88AEE31462AFEB0C /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0ACDF6A4B9C5454465316F15 /* PBXTargetDependency */,
 			);
 			name = LLMTranslateTextExt;
 			packageProductDependencies = (
@@ -121,6 +342,43 @@
 			productName = LLMTranslateTextExt;
 			productReference = 5331BF8BE9942A161FEE4B3D /* LLMTranslateTextExt.appex */;
 			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		BD3918A8A4173BA079E294B2 /* LLMTranslateKitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B4AF613222F60B76C4193D8E /* Build configuration list for PBXNativeTarget "LLMTranslateKitTests" */;
+			buildPhases = (
+				F2F8DD9F7C02A18396647590 /* Sources */,
+				A4ADE75D348E25D4F890BFEC /* Frameworks */,
+				8511A4666556D9D607C215E1 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F7BBDC38CF908C57E615ED32 /* PBXTargetDependency */,
+			);
+			name = LLMTranslateKitTests;
+			packageProductDependencies = (
+			);
+			productName = LLMTranslateKitTests;
+			productReference = 7C94AF28F595FE71A9515E99 /* LLMTranslateKitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3EB5FFCA2C36B7CAE3294941 /* Build configuration list for PBXNativeTarget "LLMTranslateKit" */;
+			buildPhases = (
+				83A03F995915F999F3531783 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LLMTranslateKit;
+			packageProductDependencies = (
+			);
+			productName = LLMTranslateKit;
+			productReference = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
@@ -135,6 +393,12 @@
 						ProvisioningStyle = Automatic;
 					};
 					843893F720B57A0618217E6A = {
+						ProvisioningStyle = Automatic;
+					};
+					BD3918A8A4173BA079E294B2 = {
+						ProvisioningStyle = Automatic;
+					};
+					F05B66213C7E5D198DF1CF85 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -155,11 +419,56 @@
 			targets = (
 				49F058015A18679311C6827A /* LLMTranslate */,
 				843893F720B57A0618217E6A /* LLMTranslateTextExt */,
+				F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */,
+				BD3918A8A4173BA079E294B2 /* LLMTranslateKitTests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		071EC37E06103855E3160A04 /* Добавить translation-ui-provider.network-access в Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Добавить translation-ui-provider.network-access в Info.plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "PLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n/usr/libexec/PlistBuddy -c \"Delete :com.apple.developer.translation-ui-provider.network-access\" \"$PLIST\" 2>/dev/null\n/usr/libexec/PlistBuddy -c \"Add :com.apple.developer.translation-ui-provider.network-access bool true\" \"$PLIST\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		83A03F995915F999F3531783 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C8315A9019FD16A2B6AA59D7 /* KeychainStore.swift in Sources */,
+				E6685F9F9F335C65C20AD28F /* LLMTranslateSettings.swift in Sources */,
+				AADCEBE11C0DE1448E923057 /* LanguagePairResolver.swift in Sources */,
+				9487ABB06B88097185B852C9 /* LocalLanguageDetector.swift in Sources */,
+				FD21BB9F1056307224D30C45 /* ModelDescriptor.swift in Sources */,
+				9D6734B2C99D916A30C27C38 /* OpenAICompatibleProvider.swift in Sources */,
+				FC97C3ADBF5112A5A31AB953 /* OpenAIStreamEvent.swift in Sources */,
+				9376B93D534B1180134E3F78 /* PromptBuilder.swift in Sources */,
+				C5E6A21A3E5E56A7BFA47235 /* ProviderID.swift in Sources */,
+				288F7BE65BD18229448F56A3 /* ResponseSanitizer.swift in Sources */,
+				D2C44A516CDCF8070EC4D6B1 /* SSELineAssembler.swift in Sources */,
+				933350A71F8C9ABF5A012940 /* SharedIdentifiers.swift in Sources */,
+				AAABCE2B55FDCDEBDCE67513 /* TranslationError.swift in Sources */,
+				9CD50CE38A6B82E6A02B4321 /* TranslationProvider.swift in Sources */,
+				118A4285BFEC6A08EC662589 /* TranslationRequest.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AB86FF439A3F072F552D7EF8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -174,16 +483,44 @@
 			files = (
 				6DD00BE963ACD73B1FB67594 /* ContentView.swift in Sources */,
 				AC5A6D78A011DF93C66BE8CF /* LLMTranslateApp.swift in Sources */,
+				C65A9B117693B9A72F6BE605 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2F8DD9F7C02A18396647590 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE6BFF6E9A180CDF09C99A4E /* ErrorMappingTests.swift in Sources */,
+				CC348C51CE4FB69E618D29B0 /* KeychainStoreTests.swift in Sources */,
+				4BD0E72F0BAB9D0DE026BE1A /* LanguagePairResolverTests.swift in Sources */,
+				4A7664DBF8A25FCCB582BA0A /* OpenAISSEParsingTests.swift in Sources */,
+				2BD67B44B952D1EDFD8D338D /* ResponseSanitizerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0ACDF6A4B9C5454465316F15 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */;
+			targetProxy = 62833AE9E2FA4C165BE4B2C9 /* PBXContainerItemProxy */;
+		};
+		6D5A95E3BB6F0BCD243BD63D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */;
+			targetProxy = 58421CF25BA6300CF1F31EE5 /* PBXContainerItemProxy */;
+		};
 		89C3B55C01D964414CE8745E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 843893F720B57A0618217E6A /* LLMTranslateTextExt */;
 			targetProxy = EEAABEEC7D885E2BD6C3FD8E /* PBXContainerItemProxy */;
+		};
+		F7BBDC38CF908C57E615ED32 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */;
+			targetProxy = B12CABC931499A357B718EE3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -256,8 +593,11 @@
 				CODE_SIGN_ENTITLEMENTS = LLMTranslate/Resources/LLMTranslate.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = LLMTranslate/Resources/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LLMTranslate;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -277,8 +617,11 @@
 				CODE_SIGN_ENTITLEMENTS = LLMTranslate/Resources/LLMTranslate.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = LLMTranslate/Resources/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LLMTranslate;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -290,6 +633,24 @@
 			};
 			name = Debug;
 		};
+		81AC567A1B35DDA49C65CF35 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.kit.tests;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		911532779DBE94CC6ECD3918 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -297,10 +658,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LLMTranslateTextExt/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.textext;
 				PRODUCT_NAME = LLMTranslateTextExt;
 				SDKROOT = iphoneos;
@@ -376,6 +734,80 @@
 			};
 			name = Debug;
 		};
+		B8162929D8DDC859336E7F6D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.kit.tests;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F046E746687EFC6289A27651 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LLMTranslateKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.kit;
+				PRODUCT_NAME = LLMTranslateKit;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		FCC4D7FA09556F2BAFF57152 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LLMTranslateKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.kit;
+				PRODUCT_NAME = LLMTranslateKit;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
 		FF494619A339D7F0A4EE0442 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -383,10 +815,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LLMTranslateTextExt/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.textext;
 				PRODUCT_NAME = LLMTranslateTextExt;
 				SDKROOT = iphoneos;
@@ -403,6 +832,24 @@
 			buildConfigurations = (
 				957FC10F9A0B21B9C1A90BD1 /* Debug */,
 				160AB3996BF474CBCC951514 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3EB5FFCA2C36B7CAE3294941 /* Build configuration list for PBXNativeTarget "LLMTranslateKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCC4D7FA09556F2BAFF57152 /* Debug */,
+				F046E746687EFC6289A27651 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B4AF613222F60B76C4193D8E /* Build configuration list for PBXNativeTarget "LLMTranslateKitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B8162929D8DDC859336E7F6D /* Debug */,
+				81AC567A1B35DDA49C65CF35 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

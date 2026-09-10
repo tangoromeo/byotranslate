@@ -22,34 +22,41 @@ targets:
       - path: LLMTranslate/Sources
     resources:
       - path: LLMTranslate/Resources/Assets.xcassets
-    info:
-      path: LLMTranslate/Resources/Info.plist
-      properties:
-        CFBundleDisplayName: LLMTranslate
-        LSRequiresIPhoneOS: true
-        UILaunchScreen: {}
-        UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: true
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
-        com.apple.developer.translation-ui-provider.network-access: true
     entitlements:
       path: LLMTranslate/Resources/LLMTranslate.entitlements
       properties:
         com.apple.developer.translation-app: true
+        com.apple.security.application-groups:
+          - group.com.tyrex.llmtranslate
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.tyrex.llmtranslate.shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate
         PRODUCT_NAME: LLMTranslate
         CODE_SIGN_STYLE: Automatic
-        GENERATE_INFOPLIST_FILE: false
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_CFBundleDisplayName: LLMTranslate
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     dependencies:
       - target: LLMTranslateTextExt
         embed: true
+      - target: LLMTranslateKit
+        embed: true
+    postbuildScripts:
+      # `INFOPLIST_KEY_com.apple.developer.translation-ui-provider.network-access`
+      # не подхватывается генератором Info.plist (точки в имени ключа — не
+      # обычный Apple-подкейс вроде UILaunchScreen_Generation), поэтому ключ
+      # раздела 4.2 ТЗ добавляется постобработкой уже сгенерированного файла.
+      - name: "Добавить translation-ui-provider.network-access в Info.plist"
+        script: |
+          PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.translation-ui-provider.network-access" "$PLIST" 2>/dev/null
+          /usr/libexec/PlistBuddy -c "Add :com.apple.developer.translation-ui-provider.network-access bool true" "$PLIST"
     scheme: {}
 
   LLMTranslateTextExt:
@@ -67,6 +74,10 @@ targets:
       path: LLMTranslateTextExt/LLMTranslateTextExt.entitlements
       properties:
         com.apple.developer.translation-app: true
+        com.apple.security.application-groups:
+          - group.com.tyrex.llmtranslate
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.tyrex.llmtranslate.shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.textext
@@ -74,3 +85,59 @@ targets:
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         SKIP_INSTALL: false
+        # LLMTranslateKit не embed-ится в само расширение (embed: false
+        # ниже) — единственная копия лежит в LLMTranslate.app/Frameworks,
+        # embed-нутая хост-приложением. Без явного добавления
+        # @executable_path/../../Frameworks сюда расширение падает при
+        # запуске: "Library not loaded: @rpath/LLMTranslateKit.framework" —
+        # дефолтный LD_RUNPATH_SEARCH_PATHS для extensionkit-extension
+        # содержит только @executable_path/Frameworks (свою же, пустую,
+        # папку), путь до Frameworks хост-приложения в шаблоне Xcode
+        # добавляется отдельной строкой (см. LD_RUNPATH_SEARCH_PATHS в
+        # "iOS ExtensionKit Extension Base.xctemplate"), но xcodegen не
+        # применяет этот темплейт-дефолт сам по себе.
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    dependencies:
+      - target: LLMTranslateKit
+        embed: false
+        link: true
+
+  LLMTranslateKit:
+    type: framework
+    platform: iOS
+    sources:
+      - path: LLMTranslateKit/Sources
+    info:
+      path: LLMTranslateKit/Info.plist
+      properties:
+        CFBundleDisplayName: LLMTranslateKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.kit
+        PRODUCT_NAME: LLMTranslateKit
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        DEFINES_MODULE: true
+        SKIP_INSTALL: false
+        BUILD_LIBRARY_FOR_DISTRIBUTION: false
+        SUPPORTS_MACCATALYST: false
+
+  LLMTranslateKitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LLMTranslateKitTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.kit.tests
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: true
+        SUPPORTS_MACCATALYST: false
+    dependencies:
+      - target: LLMTranslateKit
+        embed: true
+    scheme:
+      testTargets:
+        - LLMTranslateKitTests
+      test:
+        config: Debug

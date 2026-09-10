@@ -226,3 +226,28 @@ UIApplication.openDefaultApplicationsSettingsURLString)!)` из
   profile с включённой capability Translation для App ID — это
   требует входа в Apple Developer аккаунт, отдельный шаг за пределами
   этапа 0.
+- **Схема `bundle.unit-test`-таргета в этой сборке Xcode 26.6 не
+  резолвит ни одной destination для iOS Simulator** ни через
+  `-showdestinations`, ни через `test`/`build-for-testing` — независимо
+  от `GENERATE_INFOPLIST_FILE`, `SUPPORTS_MACCATALYST` и наличия
+  test-host приложения. Воспроизведено на полностью минимальном проекте
+  (app + один unit-test таргет, ничего специфичного для LLMTranslate).
+  Похоже на отдельный баг конкретно этой Xcode-сборки для типа таргета
+  `com.apple.product-type.bundle.unit-test` — того же рода, что и баг с
+  `-destination` из этапа 0, но с другим триггером (там чинилось через
+  `-target`/`-sdk`, здесь `xcodebuild test` в принципе не работает без
+  `-scheme`). Реальный `.xctest`-бандл при этом собирается без ошибок:
+  `xcodebuild -target LLMTranslateKitTests -sdk iphonesimulator build`
+  проходит чисто, значит дело именно в резолве дестинации, не в
+  конфигурации таргета.
+
+  Обходной путь для этапа 1: временный SPM-пакет в scratchpad
+  (`Package.swift` с `.target`/`.testTarget`, пути — симлинки на
+  реальные `LLMTranslateKit/Sources` и `LLMTranslateKitTests`, не
+  коммитится в репозиторий), тесты гоняются через `swift test` на
+  macOS. Логика вся платформонезависимая (`Foundation`, `Security`,
+  `NaturalLanguage` — все три доступны и на macOS), поэтому это честная
+  проверка тех же исходников, просто не через iOS-симулятор. На реальном
+  устройстве/при наличии рабочего Xcode это же самое стоит перепроверить
+  через штатный `⌘U` — там эта проблема резолва дестинации не должна
+  воспроизводиться (она специфична для этой конкретной сборки Xcode).
