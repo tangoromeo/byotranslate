@@ -1,0 +1,76 @@
+name: LLMTranslate
+options:
+  bundleIdPrefix: com.tyrex.llmtranslate
+  deploymentTarget:
+    iOS: "18.4"
+  developmentLanguage: ru
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.4"
+    TARGETED_DEVICE_FAMILY: "1,2"
+
+targets:
+  LLMTranslate:
+    type: application
+    platform: iOS
+    sources:
+      - path: LLMTranslate/Sources
+    resources:
+      - path: LLMTranslate/Resources/Assets.xcassets
+    info:
+      path: LLMTranslate/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: LLMTranslate
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        com.apple.developer.translation-ui-provider.network-access: true
+    entitlements:
+      path: LLMTranslate/Resources/LLMTranslate.entitlements
+      properties:
+        com.apple.developer.translation-app: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate
+        PRODUCT_NAME: LLMTranslate
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - target: LLMTranslateTextExt
+        embed: true
+    scheme: {}
+
+  LLMTranslateTextExt:
+    type: extensionkit-extension
+    platform: iOS
+    sources:
+      - path: LLMTranslateTextExt/Sources
+    info:
+      path: LLMTranslateTextExt/Info.plist
+      properties:
+        CFBundleDisplayName: LLMTranslate Text
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.public.translation-ui-provider
+    entitlements:
+      path: LLMTranslateTextExt/LLMTranslateTextExt.entitlements
+      properties:
+        com.apple.developer.translation-app: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.textext
+        PRODUCT_NAME: LLMTranslateTextExt
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: false
