@@ -18,9 +18,18 @@ public struct LanguagePairResolution: Sendable, Equatable {
 public enum LanguagePairResolver {
     /// Порог уверенности распознавания — п. 5 раздела 7 ТЗ.
     public static let minimumConfidence: Double = 0.5
-    /// Минимальная длина текста, при которой распознаванию можно доверять —
-    /// п. 5 раздела 7 ТЗ.
-    public static let minimumTextLength = 3
+    /// Минимальная длина текста, при которой распознаванию можно доверять.
+    ///
+    /// ТЗ (раздел 7, п. 5) называет порог в 3 символа — это годится как
+    /// защита от пустого/мусорного ввода, но не как порог надёжности:
+    /// заголовок `NLLanguageRecognizer.h` прямым текстом предупреждает,
+    /// что короче ~30 символов распознавание ненадёжно («insufficient
+    /// context may lead to ambiguous or incorrect results... For best
+    /// results, provide full sentences»). Одно слово вроде "Lepidoptera"
+    /// (11 символов) прошло бы порог из ТЗ, но именно на таких коротких
+    /// строках `NLLanguageRecognizer` чаще всего путает язык. Здесь взят
+    /// порог, который называет сама Apple, а не число из ТЗ.
+    public static let minimumTextLength = 30
 
     public static func resolve(
         rawDetectedLanguage: Locale.Language?,
