@@ -14,21 +14,26 @@
 		151CF9AD6E92850AD448D091 /* GeminiStreamParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C8D96CA4723A54A81B323D /* GeminiStreamParsingTests.swift */; };
 		155AF487F96631B09348F3CF /* LLMTranslateTextExt.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 5331BF8BE9942A161FEE4B3D /* LLMTranslateTextExt.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		15B7F332EE9DA2EFA1F611F0 /* AnthropicRequestBodyBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435AA8D74EBD1902BD2CB532 /* AnthropicRequestBodyBuilderTests.swift */; };
+		17E7ABAB037BC1297CBD0E6C /* TranslateShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92518E2ECB8C6B573F67D882 /* TranslateShortcuts.swift */; };
 		1C151CA01FE3B3BCC7CAB8E5 /* ImagePreparation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4572E1FCF82BA512D1A2B3EA /* ImagePreparation.swift */; };
 		20CCB18A68420D62B4B2E867 /* LLMTranslateKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; };
 		286E350E7FF6970183D5FB1B /* DictionaryModeDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0394A1E1D225AEFAD958F190 /* DictionaryModeDetectorTests.swift */; };
 		288F7BE65BD18229448F56A3 /* ResponseSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1AB3C52C951EB946786772 /* ResponseSanitizer.swift */; };
 		2BD67B44B952D1EDFD8D338D /* ResponseSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD8AFF3F8ACE381B522738 /* ResponseSanitizerTests.swift */; };
 		3206BF5E8C03DCC79DCDCE3F /* AnthropicSSELineParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2EC2F08C8B4833BF7A4A209 /* AnthropicSSELineParser.swift */; };
+		38048A4DCD5819517578E3AB /* TranslateShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92518E2ECB8C6B573F67D882 /* TranslateShortcuts.swift */; };
 		383F781488B7CD29B8BA7139 /* GeminiProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8687044768EDE93C0A68794A /* GeminiProvider.swift */; };
 		4058AA715C6E9DC67F403C24 /* TranslationModeResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2BF02DCCAB0C128308F78C /* TranslationModeResolverTests.swift */; };
+		44E7FE936C1FB5AC5B4DA5A6 /* TranslateLatestScreenshotIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8ADEBC01036535C1350720 /* TranslateLatestScreenshotIntent.swift */; };
 		4983177D70C0AB697EF93B4A /* OpenAIModelListParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DC139895C3EFC6D7623688 /* OpenAIModelListParsingTests.swift */; };
 		4A7664DBF8A25FCCB582BA0A /* OpenAISSEParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D6E1492091E44C8937E929 /* OpenAISSEParsingTests.swift */; };
 		4BD0E72F0BAB9D0DE026BE1A /* LanguagePairResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF9DA30F53E6FB78973256D8 /* LanguagePairResolverTests.swift */; };
 		4CBDDF596233340258CD955A /* ImagePreparationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C2EFC3A76BE96DF729832FC /* ImagePreparationTests.swift */; };
+		50C851F7AD8C1D53A5DF7020 /* ScreenshotFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D7A70FA9FB13D00DEB1053 /* ScreenshotFetcher.swift */; };
 		5B033CB0AA4F8E74B599D4BA /* NotesMarkerParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 332552E108D071D3BDCF5DE9 /* NotesMarkerParserTests.swift */; };
 		5B96692CB9A7FEB98E86A445 /* TranslationModeResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B567BB15FCCFE44A8AC3AF6D /* TranslationModeResolver.swift */; };
 		60944E4652A2157B6C2E31A1 /* OpenAIRequestBodyBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8BE457F963CF4E40F2055C /* OpenAIRequestBodyBuilderTests.swift */; };
+		684AA000A3AE576B62871DA8 /* TranslateImageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FF73C50FE8ADC1244023C1 /* TranslateImageIntent.swift */; };
 		6DD00BE963ACD73B1FB67594 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B93A6C54D21EF37F5F8C1C91 /* ContentView.swift */; };
 		6F69C01D34D9004C3E1E9810 /* LLMTranslateKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; };
 		738ACBC069F0B8687AA8DF86 /* ImageResizeMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877C092A85DBC34DDB52F790 /* ImageResizeMath.swift */; };
@@ -41,6 +46,7 @@
 		933350A71F8C9ABF5A012940 /* SharedIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */; };
 		9376B93D534B1180134E3F78 /* PromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8751E1D96EAE562E478F1451 /* PromptBuilder.swift */; };
 		9487ABB06B88097185B852C9 /* LocalLanguageDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */; };
+		949BDCA74E722C6FA5E1CC66 /* LLMTranslateControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84216DA4F2DF754088771E5E /* LLMTranslateControl.swift */; };
 		94DD5D0B201AA6528283899A /* SSEStreamRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF1CF118A639582B9FCBDCC /* SSEStreamRunner.swift */; };
 		970D4B2816A286AA488D7B1E /* LLMTranslateShareExt.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8CF593D8FD9F4C4D7CFC34C0 /* LLMTranslateShareExt.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		990CF404D07B73F1D2723996 /* StreamEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A976C4CD7DA8EAAA29615084 /* StreamEvent.swift */; };
@@ -54,7 +60,10 @@
 		AADCEBE11C0DE1448E923057 /* LanguagePairResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F057DCCADC682137DB983 /* LanguagePairResolver.swift */; };
 		AC5A6D78A011DF93C66BE8CF /* LLMTranslateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AAF72A9E0846E855FB9E5E /* LLMTranslateApp.swift */; };
 		B647DE51F94501E07A345318 /* TranslateExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */; };
+		B91236C31B851852F83D65E6 /* PendingImageTranslation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B920C2125E95EFDFD6F36A /* PendingImageTranslation.swift */; };
+		BF65F702CE006F80F81ED0B3 /* LLMTranslateKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; };
 		C078FBBD420E68B72EFE78A1 /* AnthropicRequestBodyBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F8FB914FBB66959B4569E4 /* AnthropicRequestBodyBuilder.swift */; };
+		C0993EA74870C895E025880F /* LLMTranslateControl.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B1F1D88EAD6BCC63F498A044 /* LLMTranslateControl.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C275230FD4BEFBFD030AAA10 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982F0AEF6EB49FDBDAEE0EBE /* ShareViewController.swift */; };
 		C5E6A21A3E5E56A7BFA47235 /* ProviderID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E59DB2AF723934D934CD5AC /* ProviderID.swift */; };
 		C65A9B117693B9A72F6BE605 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF41FD0A4B6670AD9EBFAF47 /* SettingsView.swift */; };
@@ -68,7 +77,9 @@
 		EE1E1D701CFAEF0A63DABC8E /* TranslationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE2F6E4EE7ADAEB18639550 /* TranslationMode.swift */; };
 		EE6BFF6E9A180CDF09C99A4E /* ErrorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C79511DE472363A31667EE /* ErrorMappingTests.swift */; };
 		F791710FD10F463E01187DD5 /* GeminiRequestBodyBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8713737D66C65B427F8DFFDD /* GeminiRequestBodyBuilder.swift */; };
+		FA33EA1CFB0657D8EFF5F2DB /* TranslateImageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FF73C50FE8ADC1244023C1 /* TranslateImageIntent.swift */; };
 		FC97C3ADBF5112A5A31AB953 /* OpenAIStreamEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BB0D693A3D358EF653D621 /* OpenAIStreamEvent.swift */; };
+		FCD2BEA297B229F1372BA882 /* TranslateLatestScreenshotIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8ADEBC01036535C1350720 /* TranslateLatestScreenshotIntent.swift */; };
 		FD21BB9F1056307224D30C45 /* ModelDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3E4E4AB469A92B34B005ED /* ModelDescriptor.swift */; };
 /* End PBXBuildFile section */
 
@@ -108,6 +119,20 @@
 			remoteGlobalIDString = F05B66213C7E5D198DF1CF85;
 			remoteInfo = LLMTranslateKit;
 		};
+		BFAEE8873EF2C31909935159 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F05B66213C7E5D198DF1CF85;
+			remoteInfo = LLMTranslateKit;
+		};
+		EC8C0B4601882B688A1E8DA1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 38BEF504833E078CA3FCF14E;
+			remoteInfo = LLMTranslateControl;
+		};
 		EEAABEEC7D885E2BD6C3FD8E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CF6438D21A60277A255B4070 /* Project object */;
@@ -125,6 +150,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				970D4B2816A286AA488D7B1E /* LLMTranslateShareExt.appex in Embed Foundation Extensions */,
+				C0993EA74870C895E025880F /* LLMTranslateControl.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -169,6 +195,7 @@
 		117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationProvider.swift; sourceTree = "<group>"; };
 		1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLanguageDetector.swift; sourceTree = "<group>"; };
 		1C2963634E793E7E4B577E50 /* OpenAICompatibleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAICompatibleProvider.swift; sourceTree = "<group>"; };
+		1C8ADEBC01036535C1350720 /* TranslateLatestScreenshotIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateLatestScreenshotIntent.swift; sourceTree = "<group>"; };
 		1E1AB3C52C951EB946786772 /* ResponseSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSanitizer.swift; sourceTree = "<group>"; };
 		1E59DB2AF723934D934CD5AC /* ProviderID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderID.swift; sourceTree = "<group>"; };
 		27C530367D8D8BBA93269453 /* OpenAIModelListParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIModelListParsing.swift; sourceTree = "<group>"; };
@@ -178,6 +205,7 @@
 		336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedIdentifiers.swift; sourceTree = "<group>"; };
 		37F84B61A6259F4C09D28961 /* TranslationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationSession.swift; sourceTree = "<group>"; };
 		403D7F2ACFEC2EDADB5FF4A7 /* NotesMarkerParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesMarkerParser.swift; sourceTree = "<group>"; };
+		41B920C2125E95EFDFD6F36A /* PendingImageTranslation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingImageTranslation.swift; sourceTree = "<group>"; };
 		435AA8D74EBD1902BD2CB532 /* AnthropicRequestBodyBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicRequestBodyBuilderTests.swift; sourceTree = "<group>"; };
 		4572E1FCF82BA512D1A2B3EA /* ImagePreparation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreparation.swift; sourceTree = "<group>"; };
 		4768ACEBC356362820BD6700 /* LLMTranslateSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMTranslateSettings.swift; sourceTree = "<group>"; };
@@ -192,6 +220,7 @@
 		7C2BF02DCCAB0C128308F78C /* TranslationModeResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationModeResolverTests.swift; sourceTree = "<group>"; };
 		7C94AF28F595FE71A9515E99 /* LLMTranslateKitTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LLMTranslateKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D8BE457F963CF4E40F2055C /* OpenAIRequestBodyBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIRequestBodyBuilderTests.swift; sourceTree = "<group>"; };
+		84216DA4F2DF754088771E5E /* LLMTranslateControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMTranslateControl.swift; sourceTree = "<group>"; };
 		8687044768EDE93C0A68794A /* GeminiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiProvider.swift; sourceTree = "<group>"; };
 		8713737D66C65B427F8DFFDD /* GeminiRequestBodyBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiRequestBodyBuilder.swift; sourceTree = "<group>"; };
 		8751E1D96EAE562E478F1451 /* PromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptBuilder.swift; sourceTree = "<group>"; };
@@ -201,14 +230,18 @@
 		8C2EFC3A76BE96DF729832FC /* ImagePreparationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreparationTests.swift; sourceTree = "<group>"; };
 		8CE2F6E4EE7ADAEB18639550 /* TranslationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationMode.swift; sourceTree = "<group>"; };
 		8CF593D8FD9F4C4D7CFC34C0 /* LLMTranslateShareExt.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LLMTranslateShareExt.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		92518E2ECB8C6B573F67D882 /* TranslateShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateShortcuts.swift; sourceTree = "<group>"; };
 		9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LLMTranslateKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		982F0AEF6EB49FDBDAEE0EBE /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		99D7A70FA9FB13D00DEB1053 /* ScreenshotFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotFetcher.swift; sourceTree = "<group>"; };
 		A0C8D96CA4723A54A81B323D /* GeminiStreamParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiStreamParsingTests.swift; sourceTree = "<group>"; };
 		A2382E337984EF9A3B032593 /* ProviderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderFactory.swift; sourceTree = "<group>"; };
 		A9671D6F4E22E04107094DC9 /* AnthropicStreamParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicStreamParsingTests.swift; sourceTree = "<group>"; };
 		A976C4CD7DA8EAAA29615084 /* StreamEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamEvent.swift; sourceTree = "<group>"; };
+		B1F1D88EAD6BCC63F498A044 /* LLMTranslateControl.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LLMTranslateControl.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2B25D92987790000A59057F /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		B2F8FB914FBB66959B4569E4 /* AnthropicRequestBodyBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicRequestBodyBuilder.swift; sourceTree = "<group>"; };
+		B3FF73C50FE8ADC1244023C1 /* TranslateImageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateImageIntent.swift; sourceTree = "<group>"; };
 		B567BB15FCCFE44A8AC3AF6D /* TranslationModeResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationModeResolver.swift; sourceTree = "<group>"; };
 		B93A6C54D21EF37F5F8C1C91 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BCF1CF118A639582B9FCBDCC /* SSEStreamRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEStreamRunner.swift; sourceTree = "<group>"; };
@@ -260,6 +293,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D70E669C609BC87311E7F5A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF65F702CE006F80F81ED0B3 /* LLMTranslateKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -282,10 +323,32 @@
 		02EDC3E542A3D3E3651B6C87 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				982F0AEF6EB49FDBDAEE0EBE /* ShareViewController.swift */,
+				336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */,
+				DFB783F4D1ACD64CB41A91C0 /* TranslationError.swift */,
+				117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */,
+				FE81DA696A43527007F13A69 /* Automation */,
+				C54DE197C9A7E259AE417C24 /* Image */,
+				0053A443A5F760FC228D526F /* Keychain */,
+				179F06EB6E800F88EBF5E2FB /* Language */,
+				6F19B0167A2FF537363CDE24 /* Models */,
+				6B10C2E2015CBBBDEE7C32C3 /* Orchestration */,
+				A031DC6C84C2C0973838A895 /* Prompting */,
+				C715E9BD91F9E383BE03B940 /* Providers */,
+				97FE4B84F0EEA3C265171A6B /* Settings */,
+				01248EE28F2032DDFC3347E8 /* UI */,
 			);
 			name = Sources;
-			path = LLMTranslateShareExt/Sources;
+			path = LLMTranslateKit/Sources;
+			sourceTree = "<group>";
+		};
+		16B4105CBDBC9CEAC19DCB9A /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				B3FF73C50FE8ADC1244023C1 /* TranslateImageIntent.swift */,
+				1C8ADEBC01036535C1350720 /* TranslateLatestScreenshotIntent.swift */,
+				92518E2ECB8C6B573F67D882 /* TranslateShortcuts.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 		179F06EB6E800F88EBF5E2FB /* Language */ = {
@@ -321,10 +384,10 @@
 		562081612CCD2FF479BC761B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */,
+				982F0AEF6EB49FDBDAEE0EBE /* ShareViewController.swift */,
 			);
 			name = Sources;
-			path = LLMTranslateTextExt/Sources;
+			path = LLMTranslateShareExt/Sources;
 			sourceTree = "<group>";
 		};
 		60D27FAA38264C2875740D57 /* LLMTranslateKitTests */ = {
@@ -357,6 +420,15 @@
 			path = Orchestration;
 			sourceTree = "<group>";
 		};
+		6ECD1330C3E52F8529B447DB /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				BE374DD991081575EBDDDDD6 /* TranslateExtension.swift */,
+			);
+			name = Sources;
+			path = LLMTranslateTextExt/Sources;
+			sourceTree = "<group>";
+		};
 		6F19B0167A2FF537363CDE24 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -386,6 +458,7 @@
 			isa = PBXGroup;
 			children = (
 				CD986FE554F421EB969123E3 /* LLMTranslate.app */,
+				B1F1D88EAD6BCC63F498A044 /* LLMTranslateControl.appex */,
 				9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */,
 				7C94AF28F595FE71A9515E99 /* LLMTranslateKitTests.xctest */,
 				8CF593D8FD9F4C4D7CFC34C0 /* LLMTranslateShareExt.appex */,
@@ -402,6 +475,7 @@
 				E1FC92C695F15A13E29C19ED /* Sources */,
 				02EDC3E542A3D3E3651B6C87 /* Sources */,
 				562081612CCD2FF479BC761B /* Sources */,
+				6ECD1330C3E52F8529B447DB /* Sources */,
 				8AF449B7B4844C2FF29E42C6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -431,6 +505,7 @@
 				B93A6C54D21EF37F5F8C1C91 /* ContentView.swift */,
 				52AAF72A9E0846E855FB9E5E /* LLMTranslateApp.swift */,
 				FF41FD0A4B6670AD9EBFAF47 /* SettingsView.swift */,
+				16B4105CBDBC9CEAC19DCB9A /* Intents */,
 			);
 			name = Sources;
 			path = LLMTranslate/Sources;
@@ -460,21 +535,10 @@
 		E1FC92C695F15A13E29C19ED /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				336AEB960B0597E171014FA1 /* SharedIdentifiers.swift */,
-				DFB783F4D1ACD64CB41A91C0 /* TranslationError.swift */,
-				117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */,
-				C54DE197C9A7E259AE417C24 /* Image */,
-				0053A443A5F760FC228D526F /* Keychain */,
-				179F06EB6E800F88EBF5E2FB /* Language */,
-				6F19B0167A2FF537363CDE24 /* Models */,
-				6B10C2E2015CBBBDEE7C32C3 /* Orchestration */,
-				A031DC6C84C2C0973838A895 /* Prompting */,
-				C715E9BD91F9E383BE03B940 /* Providers */,
-				97FE4B84F0EEA3C265171A6B /* Settings */,
-				01248EE28F2032DDFC3347E8 /* UI */,
+				84216DA4F2DF754088771E5E /* LLMTranslateControl.swift */,
 			);
 			name = Sources;
-			path = LLMTranslateKit/Sources;
+			path = LLMTranslateControl/Sources;
 			sourceTree = "<group>";
 		};
 		E863F8EF165A2C4E9BAA69B9 /* Shared */ = {
@@ -485,9 +549,37 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		FE81DA696A43527007F13A69 /* Automation */ = {
+			isa = PBXGroup;
+			children = (
+				41B920C2125E95EFDFD6F36A /* PendingImageTranslation.swift */,
+				99D7A70FA9FB13D00DEB1053 /* ScreenshotFetcher.swift */,
+			);
+			path = Automation;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		38BEF504833E078CA3FCF14E /* LLMTranslateControl */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BE46769625E8B8D9F5A06CD7 /* Build configuration list for PBXNativeTarget "LLMTranslateControl" */;
+			buildPhases = (
+				D8BB1A5560447C4396186257 /* Sources */,
+				D70E669C609BC87311E7F5A0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				924D5C0293888FBA5A72FBEA /* PBXTargetDependency */,
+			);
+			name = LLMTranslateControl;
+			packageProductDependencies = (
+			);
+			productName = LLMTranslateControl;
+			productReference = B1F1D88EAD6BCC63F498A044 /* LLMTranslateControl.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		49F058015A18679311C6827A /* LLMTranslate */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FEBC966DAE5E9F7BCA1E27CB /* Build configuration list for PBXNativeTarget "LLMTranslate" */;
@@ -505,6 +597,7 @@
 			dependencies = (
 				89C3B55C01D964414CE8745E /* PBXTargetDependency */,
 				059BD34667D12C18671B5EC6 /* PBXTargetDependency */,
+				7A9728D66408662CEE741113 /* PBXTargetDependency */,
 				6D5A95E3BB6F0BCD243BD63D /* PBXTargetDependency */,
 			);
 			name = LLMTranslate;
@@ -598,6 +691,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					38BEF504833E078CA3FCF14E = {
+						ProvisioningStyle = Automatic;
+					};
 					49F058015A18679311C6827A = {
 						ProvisioningStyle = Automatic;
 					};
@@ -632,6 +728,7 @@
 				49F058015A18679311C6827A /* LLMTranslate */,
 				843893F720B57A0618217E6A /* LLMTranslateTextExt */,
 				CC6E9B5F165F689B4777D01D /* LLMTranslateShareExt */,
+				38BEF504833E078CA3FCF14E /* LLMTranslateControl */,
 				F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */,
 				BD3918A8A4173BA079E294B2 /* LLMTranslateKitTests */,
 			);
@@ -710,12 +807,14 @@
 				08E0BB1A1EF3792827DCFEB4 /* OpenAIModelListParsing.swift in Sources */,
 				14D01A17F830D84AE0205DD9 /* OpenAIRequestBodyBuilder.swift in Sources */,
 				FC97C3ADBF5112A5A31AB953 /* OpenAIStreamEvent.swift in Sources */,
+				B91236C31B851852F83D65E6 /* PendingImageTranslation.swift in Sources */,
 				9376B93D534B1180134E3F78 /* PromptBuilder.swift in Sources */,
 				794D31B51EEBFFCC4C595BE3 /* ProviderFactory.swift in Sources */,
 				C5E6A21A3E5E56A7BFA47235 /* ProviderID.swift in Sources */,
 				288F7BE65BD18229448F56A3 /* ResponseSanitizer.swift in Sources */,
 				D2C44A516CDCF8070EC4D6B1 /* SSELineAssembler.swift in Sources */,
 				94DD5D0B201AA6528283899A /* SSEStreamRunner.swift in Sources */,
+				50C851F7AD8C1D53A5DF7020 /* ScreenshotFetcher.swift in Sources */,
 				933350A71F8C9ABF5A012940 /* SharedIdentifiers.swift in Sources */,
 				D24E2C0F09DA6CB29AEAF4A9 /* SlotID.swift in Sources */,
 				990CF404D07B73F1D2723996 /* StreamEvent.swift in Sources */,
@@ -736,6 +835,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D8BB1A5560447C4396186257 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				949BDCA74E722C6FA5E1CC66 /* LLMTranslateControl.swift in Sources */,
+				FA33EA1CFB0657D8EFF5F2DB /* TranslateImageIntent.swift in Sources */,
+				FCD2BEA297B229F1372BA882 /* TranslateLatestScreenshotIntent.swift in Sources */,
+				17E7ABAB037BC1297CBD0E6C /* TranslateShortcuts.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EE03CBEEAC32B3F46DAC92E8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -743,6 +853,9 @@
 				6DD00BE963ACD73B1FB67594 /* ContentView.swift in Sources */,
 				AC5A6D78A011DF93C66BE8CF /* LLMTranslateApp.swift in Sources */,
 				C65A9B117693B9A72F6BE605 /* SettingsView.swift in Sources */,
+				684AA000A3AE576B62871DA8 /* TranslateImageIntent.swift in Sources */,
+				44E7FE936C1FB5AC5B4DA5A6 /* TranslateLatestScreenshotIntent.swift in Sources */,
+				38048A4DCD5819517578E3AB /* TranslateShortcuts.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -786,10 +899,20 @@
 			target = F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */;
 			targetProxy = 58421CF25BA6300CF1F31EE5 /* PBXContainerItemProxy */;
 		};
+		7A9728D66408662CEE741113 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 38BEF504833E078CA3FCF14E /* LLMTranslateControl */;
+			targetProxy = EC8C0B4601882B688A1E8DA1 /* PBXContainerItemProxy */;
+		};
 		89C3B55C01D964414CE8745E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 843893F720B57A0618217E6A /* LLMTranslateTextExt */;
 			targetProxy = EEAABEEC7D885E2BD6C3FD8E /* PBXContainerItemProxy */;
+		};
+		924D5C0293888FBA5A72FBEA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F05B66213C7E5D198DF1CF85 /* LLMTranslateKit */;
+			targetProxy = BFAEE8873EF2C31909935159 /* PBXContainerItemProxy */;
 		};
 		9A000A5A537394CC215A49A9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -880,6 +1003,21 @@
 			};
 			name = Release;
 		};
+		50FF9284CA5A94FE7ED8CBB6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LLMTranslateControl/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.control;
+				PRODUCT_NAME = LLMTranslateControl;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		51DF2FA8FE0C963DCE2C1D25 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -889,7 +1027,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = LLMTranslate;
+				INFOPLIST_KEY_CFBundleDisplayName = "BYO Translate";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Нужен доступ к последнему скриншоту, чтобы перевести его по команде «Перевести скриншот».";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -913,7 +1052,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = LLMTranslate;
+				INFOPLIST_KEY_CFBundleDisplayName = "BYO Translate";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Нужен доступ к последнему скриншоту, чтобы перевести его по команде «Перевести скриншот».";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1028,6 +1168,21 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		A93920BADD985CC2AE1DB1B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LLMTranslateControl/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tyrex.llmtranslate.control;
+				PRODUCT_NAME = LLMTranslateControl;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
 		};
 		B8162929D8DDC859336E7F6D /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1170,6 +1325,15 @@
 			buildConfigurations = (
 				B8162929D8DDC859336E7F6D /* Debug */,
 				81AC567A1B35DDA49C65CF35 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BE46769625E8B8D9F5A06CD7 /* Build configuration list for PBXNativeTarget "LLMTranslateControl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				50FF9284CA5A94FE7ED8CBB6 /* Debug */,
+				A93920BADD985CC2AE1DB1B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

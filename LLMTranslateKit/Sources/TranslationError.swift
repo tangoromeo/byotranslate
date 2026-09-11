@@ -17,6 +17,10 @@ public enum TranslationError: Error, Sendable, Equatable {
     /// Раздел 10.7 ТЗ: не влезло даже после ступенчатого понижения
     /// качества/разрешения.
     case imageTooLarge
+    /// Раздел 10.4/11 ТЗ: E2/E3 — доступ к «Фото» не выдан.
+    case noPhotoAccess
+    /// Раздел 10.4/11 ТЗ: в смарт-альбоме «Снимки экрана» нет ни одного элемента.
+    case noScreenshotsFound
     case other(code: String?, message: String)
 
     public var localizedUserMessage: String {
@@ -30,6 +34,8 @@ public enum TranslationError: Error, Sendable, Equatable {
         case .streamInterrupted, .timeoutOrNoNetwork: "Нет ответа от провайдера"
         case .emptyResponse: "Модель вернула пустой ответ"
         case .imageTooLarge: "Изображение слишком большое"
+        case .noPhotoAccess: "Нет доступа к медиатеке"
+        case .noScreenshotsFound: "Не нашёл ни одного снимка экрана"
         case .other: "Ошибка перевода"
         }
     }
@@ -39,7 +45,8 @@ public enum TranslationError: Error, Sendable, Equatable {
     public var isRetryable: Bool {
         switch self {
         case .missingAPIKey, .authenticationRejected, .insufficientQuota,
-             .modelUnavailable, .modelDoesNotSupportImages, .imageTooLarge:
+             .modelUnavailable, .modelDoesNotSupportImages, .imageTooLarge,
+             .noPhotoAccess, .noScreenshotsFound:
             false
         case .rateLimited, .streamInterrupted, .timeoutOrNoNetwork, .emptyResponse, .other:
             true

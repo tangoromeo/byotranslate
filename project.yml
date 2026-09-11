@@ -36,16 +36,21 @@ targets:
         PRODUCT_NAME: LLMTranslate
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: true
-        INFOPLIST_KEY_CFBundleDisplayName: LLMTranslate
+        INFOPLIST_KEY_CFBundleDisplayName: BYO Translate
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Раздел 10.4/13 ТЗ: запрашивается по факту первого вызова E2/E3
+        # (TranslateLatestScreenshotIntent), не на онбординге.
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Нужен доступ к последнему скриншоту, чтобы перевести его по команде «Перевести скриншот»."
     dependencies:
       - target: LLMTranslateTextExt
         embed: true
       - target: LLMTranslateShareExt
+        embed: true
+      - target: LLMTranslateControl
         embed: true
       - target: LLMTranslateKit
         embed: true
@@ -100,7 +105,7 @@ targets:
     info:
       path: LLMTranslateTextExt/Info.plist
       properties:
-        CFBundleDisplayName: LLMTranslate Text
+        CFBundleDisplayName: BYO Translate Text
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.public.translation-ui-provider
     entitlements:
@@ -143,7 +148,7 @@ targets:
     info:
       path: LLMTranslateShareExt/Info.plist
       properties:
-        CFBundleDisplayName: LLMTranslate
+        CFBundleDisplayName: BYO Translate
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
@@ -177,6 +182,43 @@ targets:
         embed: false
         link: true
 
+  LLMTranslateControl:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LLMTranslateControl/Sources
+      # Раздел 10.9 ТЗ: intent-файлы в двух таргетах сразу (Target Membership
+      # на приложение и на этот таргет) — без этого ControlWidgetButton не
+      # может сослаться на TranslateLatestScreenshotIntent, объявленный в
+      # LLMTranslate. Сам интент по-прежнему выполняется в процессе
+      # приложения (openAppWhenRun), не здесь — этому таргету он нужен только
+      # для компиляции ссылки.
+      - path: LLMTranslate/Sources/Intents
+    info:
+      path: LLMTranslateControl/Info.plist
+      properties:
+        CFBundleDisplayName: BYO Translate Control
+        # Проверено вживую на установке в симулятор: installd отказывается
+        # ставить бандл, если для com.apple.widgetkit-extension задан
+        # NSExtensionPrincipalClass — этот extension point находит @main-тип
+        # сам, в отличие от «классических» расширений (Share/Translation).
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.control
+        PRODUCT_NAME: LLMTranslateControl
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: false
+        # Тот же фикс, что и у остальных расширений — см. комментарий у
+        # LLMTranslateTextExt.
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    dependencies:
+      - target: LLMTranslateKit
+        embed: false
+        link: true
+
   LLMTranslateKit:
     type: framework
     platform: iOS
@@ -185,7 +227,7 @@ targets:
     info:
       path: LLMTranslateKit/Info.plist
       properties:
-        CFBundleDisplayName: LLMTranslateKit
+        CFBundleDisplayName: BYO Translate Kit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.kit

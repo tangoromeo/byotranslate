@@ -216,6 +216,67 @@ actool лишь предупреждает о его отсутствии, но 
 (если этот баг toolchain'а к тому моменту не будет исправлен Apple) этот
 постбилд-скрипт можно будет просто убрать.
 
+**Дополнение с этапа 5 (App Intents):** как только в таргете `LLMTranslate`
+появились настоящие App Intents, у сборки добавился штатный шаг Xcode
+`ExtractAppIntentsMetadata` (`appintentsmetadataprocessor`) — он выполняется
+**после** обоих наших `postbuildScripts`, но **перед** финальной подписью
+всего `.app` (порядок в логе: наши скрипты → `ExtractAppIntentsMetadata` →
+`CodeSign LLMTranslate.app`), и переписывает `Info.plist`, стирая
+внедрённые вручную `CFBundleIcons`/`CFBundleIcons~ipad`. Xcode вставляет
+этот шаг на фиксированной позиции — `postbuildScripts` в xcodegen эту
+позицию не переставляют.
+
+Пока обходного пути внутри одного `xcodebuild build` нет: после каждой
+сборки, где меняются App Intents или иконка, нужно вручную повторить
+merge из уже сохранённого `partial.plist`
+(`build/.../LLMTranslate.build/actool_appicon/partial.plist`, переживает
+инкрементальную сборку) в собранный `Info.plist`:
+```
+PLIST="build/Debug-iphonesimulator/LLMTranslate.app/Info.plist"
+/usr/libexec/PlistBuddy -c "Delete :CFBundleIcons" "$PLIST" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Delete :CFBundleIcons~ipad" "$PLIST" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Merge build/.../actool_appicon/partial.plist" "$PLIST"
+```
+Заодно найден четвёртый отдельный факт про эту версию `com.apple.widgetkit-
+extension`: `NSExtensionPrincipalClass` в `NSExtension`-словаре для него
+запрещён вовсе — `installd` отказывается ставить бандл («... is not allowed
+for the extension point com.apple.widgetkit-extension»), в отличие от
+классических extension point'ов (Share/Translation), где этот ключ
+обязателен. WidgetKit-расширения находят свой `@main`-тип сами.
+
+---
+
+## 8. Известное ограничение: нет способа вернуться в предыдущее приложение после E2/E3
+
+E2/E3 (`TranslateLatestScreenshotIntent`/`TranslateImageIntent`, `openAppWhenRun
+= true`) выводят BYO Translate на передний план поверх того приложения, где
+был пользователь. Официального API «вернуться туда, откуда пришёл» для
+обычного приложения не существует в принципе — не только не найдено, а
+структурно неприменимо к этому способу запуска:
+
+- «Таблетка» `← App Name` сверху экрана (появилась в iOS 9) — реагирует
+  только на переход **приложение → приложение** через `UIApplication.open()`
+  на URL-схему/universal link или `NSUserActivity`-continuation. У неё
+  обязательно должно быть приложение-источник, которое явно открыло
+  другое. Наш случай — приложение открывает системный сервис App Intents
+  (Action Button/Siri/Shortcuts/Пункт управления), а не другое приложение,
+  так что этому механизму физически неоткуда взять контекст «откуда
+  пришли» — он не «не сработал», он структурно не про этот сценарий.
+- Приложение не может ни узнать, ни выбрать, какое другое приложение
+  было активно до него — iOS намеренно не даёт стороннему коду видеть
+  список/историю других приложений (песочница, приватность).
+
+Внедрённое временное решение (`ContentView.returnToPreviousApp()`):
+`UIControl().sendAction(#selector(URLSessionTask.suspend), to:
+UIApplication.shared, for: nil)` — неофициальный, но широко используемый
+приём, сворачивающий приложение (эквивалент нажатия Home). Это не «вернуться
+назад» в строгом смысле — у самого Home нет и никогда не было поведения
+«открой то, что было до этого», он либо уходит на Домой, либо (по стечению
+состояния стека) иногда показывает предыдущее приложение. Ведёт себя
+непредсказуемо — подтверждено вживую. Оставлено как best-effort по решению
+пользователя: без него результат стабильно хуже (лишний осознанный шаг,
+пользователь остаётся в настройках BYO Translate).
+
 ---
 
 ## Статус блокирующего критерия этапа 0

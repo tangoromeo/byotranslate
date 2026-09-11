@@ -78,7 +78,7 @@ struct SettingsView: View {
                     Button("Сохранить") { save() }
                 }
             }
-            .navigationTitle("LLMTranslate")
+            .navigationTitle("BYO Translate")
             .onAppear(perform: load)
         }
     }
