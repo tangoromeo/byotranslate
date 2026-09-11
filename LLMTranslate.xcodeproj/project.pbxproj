@@ -498,6 +498,7 @@
 				98DD6B8621192D7E6F818698 /* Embed ExtensionKit Extensions */,
 				E13932A01C0F107D4B42DF86 /* Embed Frameworks */,
 				071EC37E06103855E3160A04 /* Добавить translation-ui-provider.network-access в Info.plist */,
+				32AAC535AED19812EFF2F1FE /* Скомпилировать AppIcon вручную (actool не запускается штатно) */,
 			);
 			buildRules = (
 			);
@@ -655,6 +656,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "PLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n/usr/libexec/PlistBuddy -c \"Delete :com.apple.developer.translation-ui-provider.network-access\" \"$PLIST\" 2>/dev/null\n/usr/libexec/PlistBuddy -c \"Add :com.apple.developer.translation-ui-provider.network-access bool true\" \"$PLIST\"\n";
+		};
+		32AAC535AED19812EFF2F1FE /* Скомпилировать AppIcon вручную (actool не запускается штатно) */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Скомпилировать AppIcon вручную (actool не запускается штатно)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ACTOOL_OUT=\"$TARGET_TEMP_DIR/actool_appicon\"\nrm -rf \"$ACTOOL_OUT\"\nmkdir -p \"$ACTOOL_OUT\"\nxcrun actool --output-format human-readable-text --notices --warnings \\\n  --platform \"$PLATFORM_NAME\" \\\n  --app-icon AppIcon --output-partial-info-plist \"$ACTOOL_OUT/partial.plist\" \\\n  --enable-on-demand-resources NO \\\n  --compile \"$ACTOOL_OUT\" \\\n  \"$SRCROOT/LLMTranslate/Resources/Assets.xcassets\" || true\n\nif [ -f \"$ACTOOL_OUT/partial.plist\" ]; then\n  cp \"$ACTOOL_OUT\"/AppIcon*.png \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/\" 2>/dev/null\n  PLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n  /usr/libexec/PlistBuddy -c \"Delete :CFBundleIcons\" \"$PLIST\" 2>/dev/null\n  /usr/libexec/PlistBuddy -c \"Delete :CFBundleIcons~ipad\" \"$PLIST\" 2>/dev/null\n  /usr/libexec/PlistBuddy -c \"Merge $ACTOOL_OUT/partial.plist\" \"$PLIST\"\nelse\n  echo \"warning: actool не создал partial.plist — иконка не встроена\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

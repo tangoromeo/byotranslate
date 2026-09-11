@@ -180,6 +180,44 @@ Anthropic/Gemini адаптеры). Таблица раздела 6.2 ТЗ оп�
 
 ---
 
+## 7. Ещё один баг этой сборки Xcode 26.6: `actool`/`CompileAssetCatalog` не запускается штатно
+
+Тот же класс проблем, что с `-destination` (этап 0) и с резолвом дестинации
+`bundle.unit-test`-таргета (этап 1) — обходные пути `xcodebuild -target ...`
+(без `-scheme`) в этой сборке пропускают этап компиляции asset catalog:
+`Assets.car` не создаётся, `CFBundleIconName`/`CFBundleIcons` не попадают в
+Info.plist, иконка приложения никогда не встраивается в бандл — при этом
+`BUILD SUCCEEDED`, без единой ошибки в логе.
+
+Попытка собрать через `-scheme LLMTranslate -destination ...` (в обход
+таргет-инвокации) наткнулась на тот же баг резолва симулятора, что и раньше:
+схема видит только физические устройства-плейсхолдеры
+(`iOS 26.5 is not installed`), ни одного симулятора среди destinations нет,
+несмотря на то что у самого таргета `GENERATE_INFOPLIST_FILE: true`
+(в отличие от исходного случая с расширениями).
+
+Дополнительно у `actool` при ручном вызове обнаружился третий, отдельный
+баг toolchain'а: с флагом `--minimum-deployment-target` он падает с
+`exit 1` на проверке `No simulator runtime version from [...] available to
+use with iphonesimulator SDK version ...` — проверка не имеет отношения к
+самой компиляции иконки и просто блокирует весь вызов. Без этого флага
+actool лишь предупреждает о его отсутствии, но иконки собирает корректно
+(и по-прежнему возвращает `exit 1` из-за той же проверки рантайма — поэтому
+факт успеха проверяется по появлению `partial.plist`, не по exit code).
+
+**Обходной путь** (`project.yml`, `postbuildScripts` таргета `LLMTranslate`):
+ручной вызов `actool --platform "$PLATFORM_NAME" --app-icon AppIcon
+--output-partial-info-plist ... --compile ...` по `Assets.xcassets`, копирование
+получившихся `AppIcon*.png` в `$UNLOCALIZED_RESOURCES_FOLDER_PATH` и
+`PlistBuddy -c "Merge ... partial.plist"` в уже сгенерированный Info.plist.
+Работает только для симулятора (`$PLATFORM_NAME` = `iphonesimulator`); для
+реальной archive-сборки под устройство/App Store этот скрипт не проверялся
+и, скорее всего, потребует отдельного разбора — на реальном Xcode GUI
+(если этот баг toolchain'а к тому моменту не будет исправлен Apple) этот
+постбилд-скрипт можно будет просто убрать.
+
+---
+
 ## Статус блокирующего критерия этапа 0
 
 Собрано и проверено:

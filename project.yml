@@ -59,6 +59,37 @@ targets:
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
           /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.translation-ui-provider.network-access" "$PLIST" 2>/dev/null
           /usr/libexec/PlistBuddy -c "Add :com.apple.developer.translation-ui-provider.network-access bool true" "$PLIST"
+      # Собственный баг этой сборки Xcode 26.6 (см. NOTES.md — тот же класс
+      # проблем, что с `-destination`/`bundle.unit-test`): при сборке через
+      # `xcodebuild -target ... build` (без `-scheme` — со схемой вообще не
+      # резолвится ни один симулятор) этап компиляции asset catalog
+      # (actool/CompileAssetCatalog) просто не запускается — Assets.car не
+      # создаётся, иконка приложения никогда не попадает в бандл. Прогоняем
+      # actool вручную. `actool` также падает с exit 1 на отдельной проверке
+      # версии симулятор-рантайма, не имеющей отношения к самой компиляции
+      # (третий отдельный баг toolchain'а) — поэтому ориентируемся на факт
+      # появления partial.plist, а не на exit code.
+      - name: "Скомпилировать AppIcon вручную (actool не запускается штатно)"
+        script: |
+          ACTOOL_OUT="$TARGET_TEMP_DIR/actool_appicon"
+          rm -rf "$ACTOOL_OUT"
+          mkdir -p "$ACTOOL_OUT"
+          xcrun actool --output-format human-readable-text --notices --warnings \
+            --platform "$PLATFORM_NAME" \
+            --app-icon AppIcon --output-partial-info-plist "$ACTOOL_OUT/partial.plist" \
+            --enable-on-demand-resources NO \
+            --compile "$ACTOOL_OUT" \
+            "$SRCROOT/LLMTranslate/Resources/Assets.xcassets" || true
+
+          if [ -f "$ACTOOL_OUT/partial.plist" ]; then
+            cp "$ACTOOL_OUT"/AppIcon*.png "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/" 2>/dev/null
+            PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+            /usr/libexec/PlistBuddy -c "Delete :CFBundleIcons" "$PLIST" 2>/dev/null
+            /usr/libexec/PlistBuddy -c "Delete :CFBundleIcons~ipad" "$PLIST" 2>/dev/null
+            /usr/libexec/PlistBuddy -c "Merge $ACTOOL_OUT/partial.plist" "$PLIST"
+          else
+            echo "warning: actool не создал partial.plist — иконка не встроена"
+          fi
     scheme: {}
 
   LLMTranslateTextExt:
