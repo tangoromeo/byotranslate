@@ -160,6 +160,26 @@ UIApplication.openDefaultApplicationsSettingsURLString)!)` из
 
 ---
 
+## 6. Расхождение с таблицей ТЗ 6.2: Gemini `streamGenerateContent` требует `?alt=sse`
+
+Обнаружено при реализации `GeminiProvider` (этап 2/3 ТЗ v1.2, слоты +
+Anthropic/Gemini адаптеры). Таблица раздела 6.2 ТЗ описывает эндпоинт как
+`{baseURL}/models/{model}:streamGenerateContent` без оговорок про параметры
+запроса. По актуальной документации Google AI (проверено веб-поиском на
+момент реализации): без query-параметра `alt=sse` этот эндпоинт отдаёт один
+большой JSON-массив целиком, а не построчный SSE — то есть построчный
+парсинг (`data: {...}\n\n`), который держит вся остальная стриминговая
+инфраструктура проекта (`SSELineAssembler` и т. д.), для Gemini без этого
+параметра не сработает вовсе.
+
+Исправлено в `GeminiProvider.buildRequest`: URL собирается с
+`?alt=sse` явно. Также у Gemini, в отличие от OpenAI (`[DONE]`) и Anthropic
+(`message_stop`), нет строкового/событийного терминатора конца потока —
+конец стрима определяется закрытием соединения после HTTP 200
+(`SSEStreamCompletionPolicy.closeIsSuccess`).
+
+---
+
 ## Статус блокирующего критерия этапа 0
 
 Собрано и проверено:
