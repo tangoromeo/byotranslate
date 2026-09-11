@@ -6,12 +6,17 @@ import LLMTranslateKit
 /// (онбординг, кэш/счётчик) — этапы 5-7.
 struct SettingsView: View {
     private let settings = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)
+    private let cache = TranslationCache(appGroupSuiteName: SharedIdentifiers.appGroup)
+    private let usageCounter = UsageCounter(appGroupSuiteName: SharedIdentifiers.appGroup)
 
     @State private var primaryTargetCode: String = "ru"
     @State private var secondaryTargetCode: String = "en"
     @State private var notesMode: NotesMode = .off
     @State private var dictionaryModeEnabled: Bool = true
     @State private var showOriginalText: Bool = false
+    @State private var cacheEnabled: Bool = false
+    @State private var cacheSizeBytes: Int = 0
+    @State private var usageSummaries: [UsageCounter.Summary] = []
 
     var body: some View {
         NavigationStack {
@@ -53,7 +58,7 @@ struct SettingsView: View {
                             title: "Промпт для текста",
                             defaultText: PromptBuilder.defaultTextSystemPrompt,
                             get: { settings?.customTextPrompt },
-                            set: { settings?.customTextPrompt = $0 }
+                            set: { settings?.customTextPrompt = $0; clearCache() }
                         )
                     }
                     NavigationLink("Промпт для изображений") {
@@ -61,7 +66,7 @@ struct SettingsView: View {
                             title: "Промпт для изображений",
                             defaultText: PromptBuilder.defaultImageSystemPrompt,
                             get: { settings?.customImagePrompt },
-                            set: { settings?.customImagePrompt = $0 }
+                            set: { settings?.customImagePrompt = $0; clearCache() }
                         )
                     }
                     NavigationLink("Надстройка «Пояснить»") {
@@ -69,8 +74,30 @@ struct SettingsView: View {
                             title: "Надстройка «Пояснить»",
                             defaultText: PromptBuilder.defaultNotesAddendum,
                             get: { settings?.customNotesAddendum },
-                            set: { settings?.customNotesAddendum = $0 }
+                            set: { settings?.customNotesAddendum = $0; clearCache() }
                         )
+                    }
+                }
+
+                Section {
+                    Toggle("Кэшировать переводы", isOn: $cacheEnabled)
+                    Text("Переводы сохраняются на устройстве в зашифрованном виде на сутки, чтобы повторный перевод того же текста был мгновенным.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    LabeledContent("Размер кэша", value: cacheSizeText)
+                    Button("Очистить кэш") { clearCache() }
+                } header: {
+                    Text("Кэш")
+                }
+
+                if !usageSummaries.isEmpty {
+                    Section {
+                        ForEach(Array(usageSummaries.enumerated()), id: \.offset) { _, summary in
+                            LabeledContent(usageRowTitle(summary), value: usageRowValue(summary))
+                        }
+                        Button("Сбросить счётчик") { resetUsage() }
+                    } header: {
+                        Text("Расход за месяц")
                     }
                 }
 
@@ -83,6 +110,35 @@ struct SettingsView: View {
         }
     }
 
+    private var cacheSizeText: String {
+        let bytes = cacheSizeBytes
+        if bytes < 1024 { return "\(bytes) Б" }
+        return String(format: "%.1f КБ", Double(bytes) / 1024)
+    }
+
+    private func usageRowTitle(_ summary: UsageCounter.Summary) -> String {
+        let slotName = summary.slot == .working ? "Рабочая" : "Сильная"
+        let kind = summary.isImage ? "изображения" : "текст"
+        return "\(slotName), \(kind)"
+    }
+
+    private func usageRowValue(_ summary: UsageCounter.Summary) -> String {
+        guard let inputTokens = summary.inputTokens, let outputTokens = summary.outputTokens else {
+            return "\(summary.requestCount) — токены неизвестны"
+        }
+        return "\(summary.requestCount), \(inputTokens)/\(outputTokens) токенов"
+    }
+
+    private func clearCache() {
+        cache.clear()
+        cacheSizeBytes = cache.currentSizeBytes
+    }
+
+    private func resetUsage() {
+        usageCounter?.reset()
+        usageSummaries = usageCounter?.currentMonthSummaries() ?? []
+    }
+
     private func load() {
         guard let settings else { return }
         primaryTargetCode = settings.primaryTargetLanguage.minimalIdentifier
@@ -90,6 +146,9 @@ struct SettingsView: View {
         notesMode = settings.notesMode
         dictionaryModeEnabled = settings.dictionaryModeEnabled
         showOriginalText = settings.showOriginalTextInSheet
+        cacheEnabled = settings.cacheEnabled
+        cacheSizeBytes = cache.currentSizeBytes
+        usageSummaries = usageCounter?.currentMonthSummaries() ?? []
     }
 
     private func save() {
@@ -99,6 +158,8 @@ struct SettingsView: View {
         settings.notesMode = notesMode
         settings.dictionaryModeEnabled = dictionaryModeEnabled
         settings.showOriginalTextInSheet = showOriginalText
+        settings.cacheEnabled = cacheEnabled
+        cacheSizeBytes = cache.currentSizeBytes
     }
 }
 
@@ -225,6 +286,10 @@ private struct SlotSettingsView: View {
             storedKeyPreview = KeychainStore.maskedPreview(apiKeyInput)
             apiKeyInput = ""
         }
+
+        // Раздел 11.4 ТЗ: «Кэш полностью очищается при смене любого слота,
+        // модели или системного промпта».
+        TranslationCache(appGroupSuiteName: SharedIdentifiers.appGroup).clear()
     }
 
     /// Раздел 12, экран 2 ТЗ: «Проверить» → тестовый перевод "Hello, world".

@@ -34,9 +34,13 @@ public struct KeychainStore: Sendable {
     }
 
     private func baseQuery(for slot: SlotID) -> [String: Any] {
+        baseQuery(forRawService: service(for: slot))
+    }
+
+    private func baseQuery(forRawService serviceName: String) -> [String: Any] {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service(for: slot),
+            kSecAttrService as String: serviceName,
         ]
         if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
@@ -78,6 +82,42 @@ public struct KeychainStore: Sendable {
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw StoreError.osStatus(status)
         }
+    }
+
+    // MARK: - Ключ шифрования кэша (раздел 5/11.4 ТЗ v1.2)
+
+    private static let cacheEncryptionKeyService = "com.tyrex.llmtranslate.cache-encryption-key"
+
+    /// Отдельная запись в Keychain, та же access group — «Ключ шифрования
+    /// кэша (раздел 11.4) хранится там же, отдельной записью» (раздел 5 ТЗ).
+    /// Генерируется лениво при первом обращении и переживает переустановку
+    /// в рамках одного access group (как и API-ключи).
+    public func cacheEncryptionKeyData() throws -> Data {
+        let query = baseQuery(forRawService: Self.cacheEncryptionKeyService)
+        var readQuery = query
+        readQuery[kSecReturnData as String] = true
+        readQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(readQuery as CFDictionary, &result)
+        if status == errSecSuccess, let data = result as? Data {
+            return data
+        }
+        guard status == errSecItemNotFound else { throw StoreError.osStatus(status) }
+
+        var newKeyData = Data(count: 32) // AES-256
+        let genStatus = newKeyData.withUnsafeMutableBytes { pointer in
+            SecRandomCopyBytes(kSecRandomDefault, 32, pointer.baseAddress!)
+        }
+        guard genStatus == errSecSuccess else { throw StoreError.osStatus(genStatus) }
+
+        var attributes = query
+        attributes[kSecValueData as String] = newKeyData
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        attributes[kSecAttrSynchronizable as String] = false
+        let addStatus = SecItemAdd(attributes as CFDictionary, nil)
+        guard addStatus == errSecSuccess else { throw StoreError.osStatus(addStatus) }
+        return newKeyData
     }
 
     /// Маска для отображения в UI после сохранения — раздел 5 ТЗ: «показывать

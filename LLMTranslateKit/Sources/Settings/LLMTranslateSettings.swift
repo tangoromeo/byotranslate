@@ -40,6 +40,7 @@ public final class LLMTranslateSettings: @unchecked Sendable {
         static let customImagePrompt = "customImagePrompt"
         static let customNotesAddendum = "customNotesAddendum"
         static let showOriginalTextInSheet = "showOriginalTextInSheet"
+        static let cacheEnabled = "cacheEnabled"
     }
 
     /// Раздел 7, п. 2 ТЗ: по умолчанию — язык интерфейса устройства.
@@ -81,6 +82,13 @@ public final class LLMTranslateSettings: @unchecked Sendable {
     public var showOriginalTextInSheet: Bool {
         get { defaults.object(forKey: Key.showOriginalTextInSheet) as? Bool ?? false }
         set { defaults.set(newValue, forKey: Key.showOriginalTextInSheet) }
+    }
+
+    /// Раздел 11.4 ТЗ v1.2: «По умолчанию выключен» — осознанный размен
+    /// приватности на скорость, включает пользователь сам.
+    public var cacheEnabled: Bool {
+        get { defaults.object(forKey: Key.cacheEnabled) as? Bool ?? false }
+        set { defaults.set(newValue, forKey: Key.cacheEnabled) }
     }
 
     /// Раздел 8.1/12.3 ТЗ v1.2: редактируемые пользователем промпты. `nil` —

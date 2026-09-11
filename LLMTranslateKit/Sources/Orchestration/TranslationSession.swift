@@ -20,14 +20,19 @@ public final class TranslationSession: ObservableObject {
 
     private let appGroupSuiteName: String
     private let keychain = KeychainStore()
+    private let cache: TranslationCache
+    private let usageCounter: UsageCounter?
     private var lastContext: RunContext?
     private var lastMode: TranslationMode = .plain
 
-    // `nonisolated`: только сохраняет строку, изолированного состояния не
-    // трогает — нужен вызываемым из незолированных контекстов (SDK-замыкание
-    // TranslationUIProvider, см. TranslateExtension.swift).
+    // `nonisolated`: только сохраняет строку/строит лёгкие сторы, никакого
+    // изолированного состояния не трогает — нужен вызываемым из
+    // незолированных контекстов (SDK-замыкание TranslationUIProvider,
+    // см. TranslateExtension.swift).
     public nonisolated init(appGroupSuiteName: String) {
         self.appGroupSuiteName = appGroupSuiteName
+        self.cache = TranslationCache(appGroupSuiteName: appGroupSuiteName)
+        self.usageCounter = UsageCounter(appGroupSuiteName: appGroupSuiteName)
     }
 
     /// Раздел 11.2 ТЗ: «Если `strong` не настроен, кнопка скрыта»; «повторное
@@ -198,6 +203,30 @@ public final class TranslationSession: ObservableObject {
             maxOutputTokens: context.isImage ? 4096 : 2048
         )
 
+        // Раздел 11.4 ТЗ v1.2: кэш только для текста, никогда для изображений.
+        let cacheKey: String? = (!context.isImage && settings.cacheEnabled)
+            ? TranslationCacheKey.compute(
+                normalizedText: TranslationCacheKey.normalize(context.originalText),
+                sourceLanguageCode: context.detectedSourceLanguage?.languageCode?.identifier,
+                targetLanguageCode: context.targetLanguage.languageCode?.identifier ?? "",
+                slot: slotID,
+                model: slot.model,
+                systemPrompt: systemPrompt,
+                mode: mode
+              )
+            : nil
+
+        if let cacheKey, let hit = cache.get(key: cacheKey) {
+            // Раздел 13 ТЗ: попадание в кэш отображается синхронно, без
+            // индикатора загрузки — isTranslating уже false к этому моменту.
+            isTranslating = false
+            translation = hit.translation
+            notes = hit.notes
+            usedSlot = slotID
+            log.notice("cache hit: slot=\(slotID.rawValue, privacy: .public)")
+            return
+        }
+
         log.notice("translate start: slot=\(slotID.rawValue, privacy: .public) provider=\(slot.providerID.rawValue, privacy: .public) model=\(slot.model, privacy: .public) mode=\(String(describing: mode), privacy: .public)")
 
         var markerParser = NotesMarkerParser()
@@ -205,17 +234,24 @@ public final class TranslationSession: ObservableObject {
         var rawNotes = ""
         let start = Date()
         var deltaCount = 0
+        var promptTokens: Int?
+        var completionTokens: Int?
         do {
             for try await event in provider.stream(request: request) {
-                guard case let .delta(text) = event else { continue }
-                if deltaCount == 0 {
-                    log.notice("first delta after \(Date().timeIntervalSince(start), privacy: .public)s")
+                switch event {
+                case let .delta(text):
+                    if deltaCount == 0 {
+                        log.notice("first delta after \(Date().timeIntervalSince(start), privacy: .public)s")
+                    }
+                    deltaCount += 1
+                    let (translationPart, notesPart) = markerParser.feed(text)
+                    rawTranslation += translationPart
+                    rawNotes += notesPart
+                    translation = rawTranslation
+                case let .usage(prompt, completion):
+                    promptTokens = prompt
+                    completionTokens = completion
                 }
-                deltaCount += 1
-                let (translationPart, notesPart) = markerParser.feed(text)
-                rawTranslation += translationPart
-                rawNotes += notesPart
-                translation = rawTranslation
             }
             let (translationPart, notesPart) = markerParser.finish()
             rawTranslation += translationPart
@@ -227,9 +263,22 @@ public final class TranslationSession: ObservableObject {
                 fail(.emptyResponse)
                 return
             }
+            let finalNotes = Self.splitNotes(rawNotes)
             translation = sanitized
-            notes = Self.splitNotes(rawNotes)
+            notes = finalNotes
             usedSlot = slotID
+
+            // Раздел 11.5 ТЗ: считаются только реально выполненные запросы —
+            // попадание в кэш выше возвращается раньше и сюда не доходит.
+            usageCounter?.record(
+                slot: slotID,
+                isImage: context.isImage,
+                promptTokens: promptTokens,
+                completionTokens: completionTokens
+            )
+            if let cacheKey {
+                cache.set(key: cacheKey, translation: sanitized, notes: finalNotes)
+            }
         } catch let error as TranslationError {
             fail(error)
         } catch {
