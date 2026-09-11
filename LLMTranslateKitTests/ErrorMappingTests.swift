@@ -62,6 +62,31 @@ final class ErrorMappingTests: XCTestCase {
         XCTAssertTrue(canRetry)
     }
 
+    /// Регрессия: сервер ответил 200 и начал стрим, соединение потом
+    /// оборвалось (таймаут на `totalTimeout`) — `httpStatus` в этот момент
+    /// всё ещё 200 (успели получить заголовки до обрыва), но `underlying`
+    /// несёт настоящую сетевую ошибку. Раньше `httpStatus` проверялся
+    /// первым и проваливался в default-ветку как бессмысленная
+    /// "HTTP 200"-ошибка без ретрая — обнаружено по логам живого таймаута
+    /// на реальном устройстве (раздел 13 ТЗ, ≤3с — сюда как раз попадает
+    /// случай, когда до первого символа не доходит вовсе).
+    func test_timeoutAfterSuccessfulStatus_isNotMisclassifiedAsHTTPSuccess() {
+        let raw = RawAttemptFailure(httpStatus: 200, underlying: URLError(.timedOut), bodyMessage: nil, bodyCode: nil)
+        let (error, canRetry) = OpenAICompatibleProvider.classify(raw)
+        XCTAssertEqual(error, .timeoutOrNoNetwork)
+        XCTAssertTrue(canRetry)
+    }
+
+    func test_httpStatusInSuccessRange_withoutUnderlyingError_isUnknownFailure() {
+        // Не должно происходить на практике (успешный статус без ошибки не
+        // должен попадать в RawAttemptFailure вовсе), но не должно и путать
+        // с HTTP-ошибкой, если вдруг случится.
+        let raw = RawAttemptFailure(httpStatus: 200, underlying: nil, bodyMessage: nil, bodyCode: nil)
+        let (error, canRetry) = OpenAICompatibleProvider.classify(raw)
+        XCTAssertEqual(error, .other(code: nil, message: "unknown request failure"))
+        XCTAssertFalse(canRetry)
+    }
+
     func test_streamInterrupted_isNotAutoRetried() {
         let (error, canRetry) = OpenAICompatibleProvider.classify(TranslationError.streamInterrupted)
         XCTAssertEqual(error, .streamInterrupted)

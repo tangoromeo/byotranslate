@@ -142,7 +142,18 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
             if raw.bodyCode == "insufficient_quota" {
                 return (.insufficientQuota, false)
             }
-            if let status = raw.httpStatus {
+            // Реальная сетевая ошибка важнее захваченного HTTP-статуса.
+            // Если сервер успел ответить 200 и начать стрим, а соединение
+            // потом оборвалось (таймаут/обрыв сети), `httpStatus` всё ещё
+            // будет 200 — это не HTTP-ошибка, а сбой уже начатого стрима.
+            // Раньше `httpStatus` проверялся первым, и такой случай
+            // проваливался в default-ветку свитча как бессмысленная
+            // "HTTP 200"-ошибка, а реальная причина (таймаут) не смотрелась
+            // вовсе — обнаружено по логам живого 60-секундного таймаута.
+            if raw.underlying != nil {
+                return (.timeoutOrNoNetwork, true)
+            }
+            if let status = raw.httpStatus, !(200...299).contains(status) {
                 switch status {
                 case 401, 403: return (.authenticationRejected, false)
                 case 402: return (.insufficientQuota, false)
@@ -153,9 +164,6 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
                 default:
                     return (.other(code: "\(status)", message: raw.bodyMessage ?? "HTTP \(status)"), false)
                 }
-            }
-            if raw.underlying != nil {
-                return (.timeoutOrNoNetwork, true)
             }
             return (.other(code: nil, message: "unknown request failure"), false)
         }
