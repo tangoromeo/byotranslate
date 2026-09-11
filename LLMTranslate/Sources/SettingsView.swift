@@ -1,165 +1,48 @@
 import SwiftUI
 import LLMTranslateKit
 
-/// Раздел 12 ТЗ v1.2: настройки — два слота модели, языки, режим комментариев
-/// и словаря, редакторы промптов. Полный пятиэкранный хост-интерфейс
-/// (онбординг, кэш/счётчик) — этапы 5-7.
+/// Раздел 13 ТЗ v1.2: хост-приложение — пять минимальных экранов. Этот файл
+/// — точка входа (домашнее меню) плюс общие подэкраны слотов/промптов,
+/// переиспользуемые из `LanguagesAndPromptsView`.
 struct SettingsView: View {
     private let settings = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)
-    private let cache = TranslationCache(appGroupSuiteName: SharedIdentifiers.appGroup)
-    private let usageCounter = UsageCounter(appGroupSuiteName: SharedIdentifiers.appGroup)
-
-    @State private var primaryTargetCode: String = "ru"
-    @State private var secondaryTargetCode: String = "en"
-    @State private var notesMode: NotesMode = .off
-    @State private var dictionaryModeEnabled: Bool = true
-    @State private var showOriginalText: Bool = false
-    @State private var cacheEnabled: Bool = false
-    @State private var cacheSizeBytes: Int = 0
-    @State private var usageSummaries: [UsageCounter.Summary] = []
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Модели") {
-                    NavigationLink("Рабочая модель (working)") {
-                        SlotSettingsView(slot: .working, title: "Рабочая модель", settings: settings)
-                    }
-                    NavigationLink("Сильная модель (strong)") {
-                        SlotSettingsView(slot: .strong, title: "Сильная модель", settings: settings)
-                    }
+            List {
+                NavigationLink("Как начать") {
+                    OnboardingView()
                 }
-
-                Section("Языки") {
-                    TextField("Основной целевой (BCP-47, напр. ru)", text: $primaryTargetCode)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    TextField("Вторичный целевой (BCP-47, напр. en)", text: $secondaryTargetCode)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                NavigationLink("Модели") {
+                    ModelsHomeView(settings: settings)
                 }
-
-                Section("Шторка перевода") {
-                    Toggle("Показывать исходный текст", isOn: $showOriginalText)
+                NavigationLink("Языки и промпты") {
+                    LanguagesAndPromptsView(settings: settings)
                 }
-
-                Section("Комментарии и словарь") {
-                    Picker("Комментарии модели", selection: $notesMode) {
-                        Text("Не показывать").tag(NotesMode.off)
-                        Text("Для коротких выделений").tag(NotesMode.shortOnly)
-                        Text("Всегда").tag(NotesMode.always)
-                    }
-                    Toggle("Словарь для коротких выделений", isOn: $dictionaryModeEnabled)
-                }
-
-                Section("Промпты") {
-                    NavigationLink("Промпт для текста") {
-                        PromptEditorView(
-                            title: "Промпт для текста",
-                            defaultText: PromptBuilder.defaultTextSystemPrompt,
-                            get: { settings?.customTextPrompt },
-                            set: { settings?.customTextPrompt = $0; clearCache() }
-                        )
-                    }
-                    NavigationLink("Промпт для изображений") {
-                        PromptEditorView(
-                            title: "Промпт для изображений",
-                            defaultText: PromptBuilder.defaultImageSystemPrompt,
-                            get: { settings?.customImagePrompt },
-                            set: { settings?.customImagePrompt = $0; clearCache() }
-                        )
-                    }
-                    NavigationLink("Надстройка «Пояснить»") {
-                        PromptEditorView(
-                            title: "Надстройка «Пояснить»",
-                            defaultText: PromptBuilder.defaultNotesAddendum,
-                            get: { settings?.customNotesAddendum },
-                            set: { settings?.customNotesAddendum = $0; clearCache() }
-                        )
-                    }
-                }
-
-                Section {
-                    Toggle("Кэшировать переводы", isOn: $cacheEnabled)
-                    Text("Переводы сохраняются на устройстве в зашифрованном виде на сутки, чтобы повторный перевод того же текста был мгновенным.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    LabeledContent("Размер кэша", value: cacheSizeText)
-                    Button("Очистить кэш") { clearCache() }
-                } header: {
-                    Text("Кэш")
-                }
-
-                if !usageSummaries.isEmpty {
-                    Section {
-                        ForEach(Array(usageSummaries.enumerated()), id: \.offset) { _, summary in
-                            LabeledContent(usageRowTitle(summary), value: usageRowValue(summary))
-                        }
-                        Button("Сбросить счётчик") { resetUsage() }
-                    } header: {
-                        Text("Расход за месяц")
-                    }
-                }
-
-                Section {
-                    Button("Сохранить") { save() }
+                NavigationLink("Отладка и расход") {
+                    DebugAndUsageView(settings: settings)
                 }
             }
             .navigationTitle("BYO Translate")
-            .onAppear(perform: load)
         }
     }
+}
 
-    private var cacheSizeText: String {
-        let bytes = cacheSizeBytes
-        if bytes < 1024 { return "\(bytes) Б" }
-        return String(format: "%.1f КБ", Double(bytes) / 1024)
-    }
+/// Раздел 13, экран 2 ТЗ v1.2: два слота модели — просто список входов в
+/// `SlotSettingsView`, без собственной логики.
+private struct ModelsHomeView: View {
+    let settings: LLMTranslateSettings?
 
-    private func usageRowTitle(_ summary: UsageCounter.Summary) -> String {
-        let slotName = summary.slot == .working ? "Рабочая" : "Сильная"
-        let kind = summary.isImage ? "изображения" : "текст"
-        return "\(slotName), \(kind)"
-    }
-
-    private func usageRowValue(_ summary: UsageCounter.Summary) -> String {
-        guard let inputTokens = summary.inputTokens, let outputTokens = summary.outputTokens else {
-            return "\(summary.requestCount) — токены неизвестны"
+    var body: some View {
+        Form {
+            NavigationLink("Рабочая модель (working)") {
+                SlotSettingsView(slot: .working, title: "Рабочая модель", settings: settings)
+            }
+            NavigationLink("Сильная модель (strong)") {
+                SlotSettingsView(slot: .strong, title: "Сильная модель", settings: settings)
+            }
         }
-        return "\(summary.requestCount), \(inputTokens)/\(outputTokens) токенов"
-    }
-
-    private func clearCache() {
-        cache.clear()
-        cacheSizeBytes = cache.currentSizeBytes
-    }
-
-    private func resetUsage() {
-        usageCounter?.reset()
-        usageSummaries = usageCounter?.currentMonthSummaries() ?? []
-    }
-
-    private func load() {
-        guard let settings else { return }
-        primaryTargetCode = settings.primaryTargetLanguage.minimalIdentifier
-        secondaryTargetCode = settings.secondaryTargetLanguage.minimalIdentifier
-        notesMode = settings.notesMode
-        dictionaryModeEnabled = settings.dictionaryModeEnabled
-        showOriginalText = settings.showOriginalTextInSheet
-        cacheEnabled = settings.cacheEnabled
-        cacheSizeBytes = cache.currentSizeBytes
-        usageSummaries = usageCounter?.currentMonthSummaries() ?? []
-    }
-
-    private func save() {
-        guard let settings else { return }
-        settings.primaryTargetLanguage = Locale.Language(identifier: primaryTargetCode)
-        settings.secondaryTargetLanguage = Locale.Language(identifier: secondaryTargetCode)
-        settings.notesMode = notesMode
-        settings.dictionaryModeEnabled = dictionaryModeEnabled
-        settings.showOriginalTextInSheet = showOriginalText
-        settings.cacheEnabled = cacheEnabled
-        cacheSizeBytes = cache.currentSizeBytes
+        .navigationTitle("Модели")
     }
 }
 
@@ -306,7 +189,8 @@ private struct SlotSettingsView: View {
         }
         do {
             let capabilities = try await provider.validate()
-            validationState = .success("Модель \(capabilities.modelID) отвечает.")
+            let format = NSLocalizedString("Модель %@ отвечает.", comment: "")
+            validationState = .success(String(format: format, capabilities.modelID))
         } catch let error as TranslationError {
             validationState = .failure(error.localizedUserMessage)
         } catch {
@@ -436,7 +320,8 @@ private struct ModelPickerView: View {
 
 /// Раздел 8.1/8.3/12.3 ТЗ v1.2: редактор одного промпта с кнопкой «сбросить
 /// к исходному». `nil` в настройках — используется дефолт из `PromptBuilder`.
-private struct PromptEditorView: View {
+/// Не `private` — переиспользуется из `LanguagesAndPromptsView`.
+struct PromptEditorView: View {
     let title: String
     let defaultText: String
     let get: () -> String?

@@ -22,6 +22,7 @@ targets:
       - path: LLMTranslate/Sources
     resources:
       - path: LLMTranslate/Resources/Assets.xcassets
+      - path: LLMTranslate/Resources/en.lproj/Localizable.strings
     entitlements:
       path: LLMTranslate/Resources/LLMTranslate.entitlements
       properties:
@@ -95,6 +96,16 @@ targets:
           else
             echo "warning: actool не создал partial.plist — иконка не встроена"
           fi
+      # xcodegen не группирует .strings-файлы из `resources:` в localized
+      # variant group (известный баг генератора — .lproj/Localizable.strings
+      # остаётся «висячим» файлом и не копируется в бандл вообще, в отличие
+      # от сторибордов; см. yonaskolb/XcodeGen#763/#374). Копируем вручную,
+      # тем же способом, что и AppIcon чуть выше.
+      - name: "Скопировать Localizable.strings (xcodegen не группирует .strings как localized resource)"
+        script: |
+          DEST="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/en.lproj"
+          mkdir -p "$DEST"
+          cp "$SRCROOT/LLMTranslate/Resources/en.lproj/Localizable.strings" "$DEST/"
     scheme: {}
 
   LLMTranslateTextExt:
@@ -102,6 +113,8 @@ targets:
     platform: iOS
     sources:
       - path: LLMTranslateTextExt/Sources
+    resources:
+      - path: LLMTranslateTextExt/Resources/en.lproj/Localizable.strings
     info:
       path: LLMTranslateTextExt/Info.plist
       properties:
@@ -135,6 +148,14 @@ targets:
         # "iOS ExtensionKit Extension Base.xctemplate"), но xcodegen не
         # применяет этот темплейт-дефолт сам по себе.
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    postbuildScripts:
+      # См. комментарий у одноимённого шага в таргете LLMTranslate — тот же
+      # баг xcodegen (.strings не группируется как localized resource).
+      - name: "Скопировать Localizable.strings (xcodegen не группирует .strings как localized resource)"
+        script: |
+          DEST="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/en.lproj"
+          mkdir -p "$DEST"
+          cp "$SRCROOT/LLMTranslateTextExt/Resources/en.lproj/Localizable.strings" "$DEST/"
     dependencies:
       - target: LLMTranslateKit
         embed: false
@@ -145,6 +166,8 @@ targets:
     platform: iOS
     sources:
       - path: LLMTranslateShareExt/Sources
+    resources:
+      - path: LLMTranslateShareExt/Resources/en.lproj/Localizable.strings
     info:
       path: LLMTranslateShareExt/Info.plist
       properties:
@@ -177,6 +200,14 @@ targets:
         # (LLMTranslate.app/PlugIns/LLMTranslateShareExt.appex/), поэтому
         # тот же относительный путь до Frameworks хост-приложения подходит.
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    postbuildScripts:
+      # См. комментарий у одноимённого шага в таргете LLMTranslate — тот же
+      # баг xcodegen (.strings не группируется как localized resource).
+      - name: "Скопировать Localizable.strings (xcodegen не группирует .strings как localized resource)"
+        script: |
+          DEST="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/en.lproj"
+          mkdir -p "$DEST"
+          cp "$SRCROOT/LLMTranslateShareExt/Resources/en.lproj/Localizable.strings" "$DEST/"
     dependencies:
       - target: LLMTranslateKit
         embed: false
@@ -194,6 +225,8 @@ targets:
       # приложения (openAppWhenRun), не здесь — этому таргету он нужен только
       # для компиляции ссылки.
       - path: LLMTranslate/Sources/Intents
+    resources:
+      - path: LLMTranslateControl/Resources/en.lproj/Localizable.strings
     info:
       path: LLMTranslateControl/Info.plist
       properties:
@@ -214,6 +247,14 @@ targets:
         # Тот же фикс, что и у остальных расширений — см. комментарий у
         # LLMTranslateTextExt.
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    postbuildScripts:
+      # См. комментарий у одноимённого шага в таргете LLMTranslate — тот же
+      # баг xcodegen (.strings не группируется как localized resource).
+      - name: "Скопировать Localizable.strings (xcodegen не группирует .strings как localized resource)"
+        script: |
+          DEST="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/en.lproj"
+          mkdir -p "$DEST"
+          cp "$SRCROOT/LLMTranslateControl/Resources/en.lproj/Localizable.strings" "$DEST/"
     dependencies:
       - target: LLMTranslateKit
         embed: false
@@ -224,6 +265,8 @@ targets:
     platform: iOS
     sources:
       - path: LLMTranslateKit/Sources
+    resources:
+      - path: LLMTranslateKit/Resources/en.lproj/Localizable.strings
     info:
       path: LLMTranslateKit/Info.plist
       properties:
@@ -238,6 +281,14 @@ targets:
         SKIP_INSTALL: false
         BUILD_LIBRARY_FOR_DISTRIBUTION: false
         SUPPORTS_MACCATALYST: false
+    postbuildScripts:
+      # См. комментарий у одноимённого шага в таргете LLMTranslate — тот же
+      # баг xcodegen (.strings не группируется как localized resource).
+      - name: "Скопировать Localizable.strings (xcodegen не группирует .strings как localized resource)"
+        script: |
+          DEST="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/en.lproj"
+          mkdir -p "$DEST"
+          cp "$SRCROOT/LLMTranslateKit/Resources/en.lproj/Localizable.strings" "$DEST/"
 
   LLMTranslateKitTests:
     type: bundle.unit-test

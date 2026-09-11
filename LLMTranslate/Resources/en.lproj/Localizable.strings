@@ -1,0 +1,98 @@
+/* Раздел 17 ТЗ v1.2: английский перевод для таргета LLMTranslate (хост-приложение). Русский текст в коде — ключ и одновременно исходная (developmentLanguage) локализация, отдельного ru.lproj не требуется. */
+
+/* Общие, переиспользуемые в нескольких экранах */
+"Перевод" = "Translation";
+"Готово" = "Done";
+"Сохранить" = "Save";
+"Модели" = "Models";
+
+/* SettingsView — домашнее меню и общие подэкраны */
+"Как начать" = "Getting Started";
+"Отладка и расход" = "Debug & Usage";
+"Рабочая модель (working)" = "Working model (working)";
+"Рабочая модель" = "Working model";
+"Сильная модель (strong)" = "Strong model (strong)";
+"Сильная модель" = "Strong model";
+"Провайдер" = "Provider";
+"Модель" = "Model";
+"Список" = "List";
+"Модель понимает изображения" = "Model understands images";
+"API-ключ" = "API key";
+"Сохранён" = "Saved";
+"Проверить" = "Test";
+"Результат" = "Result";
+"Ошибка" = "Error";
+"Провайдер не поддерживается" = "Provider not supported";
+"Модель %@ отвечает." = "Model %@ responds.";
+"Только с поддержкой изображений" = "Images only";
+"Нет моделей с поддержкой изображений" = "No models support images";
+"Ничего не найдено" = "Nothing found";
+"Поиск модели" = "Search models";
+"Отмена" = "Cancel";
+"Сбросить к исходному" = "Reset to default";
+
+/* LanguagesAndPromptsView */
+"Языки" = "Languages";
+"Основной целевой (BCP-47, напр. ru)" = "Primary target (BCP-47, e.g. ru)";
+"Вторичный целевой (BCP-47, напр. en)" = "Secondary target (BCP-47, e.g. en)";
+"Шторка перевода" = "Translation sheet";
+"Показывать исходный текст" = "Show original text";
+"Комментарии и словарь" = "Notes and dictionary";
+"Комментарии модели" = "Model notes";
+"Не показывать" = "Don't show";
+"Для коротких выделений" = "For short selections";
+"Всегда" = "Always";
+"Словарь для коротких выделений" = "Dictionary for short selections";
+"Промпты" = "Prompts";
+"Промпт для текста" = "Text prompt";
+"Промпт для изображений" = "Image prompt";
+"Надстройка «Пояснить»" = "\"Explain\" addendum";
+"Глоссарий" = "Glossary";
+"Языки и промпты" = "Languages & Prompts";
+
+/* GlossaryEditorView */
+"Термин" = "Term";
+"Обязательная терминология для перевода — например, названия продуктов или устоявшиеся переводы. Подставляется в системный промпт." = "Required terminology for translation — for example, product names or established translations. Inserted into the system prompt.";
+"Добавить пару" = "Add pair";
+"Добавить" = "Add";
+
+/* DebugAndUsageView */
+"Кэшировать переводы" = "Cache translations";
+"Переводы сохраняются на устройстве в зашифрованном виде на сутки, чтобы повторный перевод того же текста был мгновенным." = "Translations are stored on the device, encrypted, for 24 hours, so translating the same text again is instant.";
+"Размер кэша" = "Cache size";
+"Очистить кэш" = "Clear cache";
+"Кэш" = "Cache";
+"Сбросить счётчик" = "Reset counter";
+"Расход за месяц" = "Usage this month";
+"Текст, до первого символа (с)" = "Text, time to first character (s)";
+"Текст, общий таймаут (с)" = "Text, total timeout (s)";
+"Текст, лимит токенов вывода" = "Text, output token limit";
+"Изображение, до первого символа (с)" = "Image, time to first character (s)";
+"Изображение, общий таймаут (с)" = "Image, total timeout (s)";
+"Изображение, лимит токенов вывода" = "Image, output token limit";
+"Таймауты и лимиты" = "Timeouts and limits";
+"Последние запросы" = "Recent requests";
+
+/* OnboardingView */
+"Что это такое" = "What this is";
+"BYO Translate — переводчик для собственного API-ключа. Вы задаёте провайдера (OpenAI-совместимый, Anthropic или Google Gemini) и модель, приложение отправляет туда выделенный текст или изображение и показывает перевод." = "BYO Translate is a translator for your own API key. You choose a provider (OpenAI-compatible, Anthropic, or Google Gemini) and model — the app sends the selected text or image there and shows the translation.";
+"BYO Translate работает как стандартный системный переводчик — через выделение текста в любом приложении, не только внутри себя." = "BYO Translate works as the system's default translator — through text selection in any app, not only inside itself.";
+"Открыть настройки" = "Open Settings";
+"Если сразу переключателя нет:" = "If the toggle isn't there right away:";
+"Настройки → Приложения → Приложения по умолчанию → Перевод → BYO Translate" = "Settings → Apps → Default Apps → Translation → BYO Translate";
+"Как назначить стандартным переводчиком" = "How to set as the default translator";
+"1. Настройки → Пункт управления → добавить «Перевести скриншот»." = "1. Settings → Control Center → add \"Translate Screenshot.\"";
+"2. Настройки → Кнопка действия → выбрать «Перевести скриншот» (если на устройстве есть кнопка «Действие»)." = "2. Settings → Action Button → choose \"Translate Screenshot\" (if your device has an Action Button).";
+"3. Обе команды доступны в приложении «Команды» сразу после установки — можно вызывать голосом через Siri или собрать в свою автоматизацию." = "3. Both shortcuts are available in the Shortcuts app right after install — call them by voice with Siri or use them in your own automations.";
+"Автоматизация: скриншоты" = "Automation: screenshots";
+"Выделенный текст и изображения отправляются напрямую на endpoint, который вы указали в настройках модели — и никуда больше. Ключ хранится в Keychain, не в логах и не в файлах. Кэш переводов (по умолчанию выключен) — единственное исключение из «ничего не сохраняется на диске»: если включить, переводы текста хранятся зашифрованными сутки, чтобы повтор того же текста был мгновенным." = "Selected text and images are sent directly to the endpoint you set in the model settings — and nowhere else. The key is stored in Keychain, never in logs or files. The translation cache (off by default) is the only exception to \"nothing is stored on disk\": if enabled, text translations are kept encrypted for 24 hours, so repeating the same text is instant.";
+"Приватность" = "Privacy";
+
+/* Intents/TranslateLatestScreenshotIntent, TranslateImageIntent */
+"Перевести изображение (из другого действия)" = "Translate Image (from another action)";
+"Изображение" = "Image";
+"Перевести последний скриншот" = "Translate Latest Screenshot";
+
+/* Intents/TranslateShortcuts (shortTitle) */
+"Перевести скриншот" = "Translate Screenshot";
+"Перевести изображение" = "Translate Image";

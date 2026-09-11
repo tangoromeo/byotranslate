@@ -1,0 +1,11 @@
+/* Раздел 17 ТЗ v1.2: английский перевод для таргета LLMTranslateTextExt (шторка F1). */
+
+"Точнее — сильная модель" = "More precise — strong model";
+"Пояснения (%lld)" = "Notes (%lld)";
+"Заменить" = "Replace";
+"Скопировано" = "Copied";
+"Копировать" = "Copy";
+"Поделиться" = "Share";
+"Точнее" = "More precise";
+"Пояснить" = "Explain";
+"Подробности" = "Details";

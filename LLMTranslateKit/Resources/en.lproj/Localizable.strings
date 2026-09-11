@@ -1,0 +1,27 @@
+/* Раздел 17 ТЗ v1.2: английский перевод для таргета LLMTranslateKit (фреймворк). Читается через Bundle.kit — не подхватывается автоматически в приложении/расширениях, у которых свой Bundle.main. */
+
+"Точнее — сильная модель" = "More precise — strong model";
+"Пояснения (%lld)" = "Notes (%lld)";
+"Подробности" = "Details";
+"Оригинал" = "Original";
+"Готово" = "Done";
+"Скопировано" = "Copied";
+"Копировать" = "Copy";
+"Поделиться" = "Share";
+"Точнее" = "More precise";
+"Пояснить" = "Explain";
+"Ещё раз" = "Retry";
+
+/* TranslationError.localizedUserMessage — явный NSLocalizedString(bundle: .kit) */
+"Не задан API-ключ" = "No API key set";
+"Ключ отклонён провайдером" = "Key rejected by provider";
+"Лимит запросов. Попробуйте через минуту" = "Rate limited. Try again in a minute";
+"Закончился баланс у провайдера" = "Provider balance exhausted";
+"Модель недоступна для этого ключа" = "Model unavailable for this key";
+"Выбранная модель не понимает изображения" = "Selected model doesn't understand images";
+"Нет ответа от провайдера" = "No response from provider";
+"Модель вернула пустой ответ" = "Model returned an empty response";
+"Изображение слишком большое" = "Image is too large";
+"Нет доступа к медиатеке" = "No access to Photos";
+"Не нашёл ни одного снимка экрана" = "Couldn't find any screenshots";
+"Ошибка перевода" = "Translation error";

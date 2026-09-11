@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import TranslationUIProvider
 import LLMTranslateKit
 
@@ -29,6 +30,7 @@ struct TranslateSheetView: View {
     @State private var isShowingNotes = false
     @State private var showOriginalText = false
     @State private var isLongText = false
+    @State private var copiedFeedback = false
 
     // Явный init, а не значение по умолчанию у @StateObject: дефолтное
     // значение сделало бы синтезированный memberwise init MainActor-
@@ -43,6 +45,11 @@ struct TranslateSheetView: View {
     /// Раздел 9 ТЗ: «Длинный текст: шторка скроллится, автоматически
     /// вызывать expandSheet(), если исходный текст длиннее 200 символов».
     private static let expandThreshold = 200
+
+    /// Раздел 9 ТЗ (строка 410): иврит/арабский результат — по правому краю.
+    private var isRTLResult: Bool {
+        session.lastTargetLanguage.map(TextDirectionResolver.isRightToLeft) ?? false
+    }
 
     var body: some View {
         Group {
@@ -79,6 +86,8 @@ struct TranslateSheetView: View {
             } else {
                 Text(session.translation)
                     .font(.body)
+                    .multilineTextAlignment(isRTLResult ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: isRTLResult ? .trailing : .leading)
                 if let usedSlot = session.usedSlot, usedSlot == .strong {
                     Text("Точнее — сильная модель")
                         .font(.caption)
@@ -96,24 +105,45 @@ struct TranslateSheetView: View {
                 }
             }
 
-            HStack {
-                Button {
-                    // Расхождение п. 4.5 ТЗ разрешено: SDK-интерфейс
-                    // (arm64e-apple-ios.swiftinterface), справочник фреймворка
-                    // TranslationUIProviderContext и штатный Xcode-темплейт
-                    // "Translation Provider Extension" сходятся на
-                    // `finish(translation:)`.
-                    context.finish(translation: AttributedString(session.translation))
-                } label: {
-                    Text("Заменить")
-                }
-                .disabled(!context.allowsReplacement || session.translation.isEmpty)
+            // Раздел 9 ТЗ («Копировать», «Заменить») + «Поделиться» по
+            // просьбе пользователя (см. BACKLOG.md B5). Обёрнуто в
+            // горизонтальный скролл — в компактной шторке пять кнопок в
+            // обычном HStack не помещаются при крупном Dynamic Type.
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    Button {
+                        // Расхождение п. 4.5 ТЗ разрешено: SDK-интерфейс
+                        // (arm64e-apple-ios.swiftinterface), справочник фреймворка
+                        // TranslationUIProviderContext и штатный Xcode-темплейт
+                        // "Translation Provider Extension" сходятся на
+                        // `finish(translation:)`.
+                        context.finish(translation: AttributedString(session.translation))
+                    } label: {
+                        Text("Заменить")
+                    }
+                    .disabled(!context.allowsReplacement || session.translation.isEmpty)
 
-                if session.canEscalate {
-                    Button("Точнее") { Task { await session.escalateToStrong() } }
-                }
-                if session.canRequestNotes {
-                    Button("Пояснить") { Task { await session.requestNotes() } }
+                    Button {
+                        UIPasteboard.general.string = session.translation
+                        copiedFeedback = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedFeedback = false }
+                    } label: {
+                        Text(copiedFeedback ? "Скопировано" : "Копировать")
+                    }
+                    .disabled(session.translation.isEmpty)
+
+                    if !session.translation.isEmpty {
+                        ShareLink(item: session.translation) {
+                            Text("Поделиться")
+                        }
+                    }
+
+                    if session.canEscalate {
+                        Button("Точнее") { Task { await session.escalateToStrong() } }
+                    }
+                    if session.canRequestNotes {
+                        Button("Пояснить") { Task { await session.requestNotes() } }
+                    }
                 }
             }
         }

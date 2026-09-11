@@ -1,0 +1,4 @@
+/* Раздел 17 ТЗ v1.2: английский перевод для таргета LLMTranslateControl (Пункт управления, E3). */
+
+"Перевести скриншот" = "Translate Screenshot";
+"Переводит последний снимок экрана." = "Translates the latest screenshot.";

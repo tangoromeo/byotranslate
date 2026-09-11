@@ -41,6 +41,13 @@ public final class LLMTranslateSettings: @unchecked Sendable {
         static let customNotesAddendum = "customNotesAddendum"
         static let showOriginalTextInSheet = "showOriginalTextInSheet"
         static let cacheEnabled = "cacheEnabled"
+        static let glossaryEntries = "glossaryEntries"
+        static let textFirstByteTimeout = "textFirstByteTimeout"
+        static let textTotalTimeout = "textTotalTimeout"
+        static let imageFirstByteTimeout = "imageFirstByteTimeout"
+        static let imageTotalTimeout = "imageTotalTimeout"
+        static let textMaxOutputTokens = "textMaxOutputTokens"
+        static let imageMaxOutputTokens = "imageMaxOutputTokens"
     }
 
     /// Раздел 7, п. 2 ТЗ: по умолчанию — язык интерфейса устройства.
@@ -89,6 +96,53 @@ public final class LLMTranslateSettings: @unchecked Sendable {
     public var cacheEnabled: Bool {
         get { defaults.object(forKey: Key.cacheEnabled) as? Bool ?? false }
         set { defaults.set(newValue, forKey: Key.cacheEnabled) }
+    }
+
+    /// Раздел 8.1/13.3 ТЗ v1.2. Пустой список по умолчанию — глоссарий не
+    /// подставляется в промпт, пока пользователь не добавит хотя бы одну
+    /// пару.
+    public var glossaryEntries: [GlossaryEntry] {
+        get {
+            guard let data = defaults.data(forKey: Key.glossaryEntries) else { return [] }
+            return (try? JSONDecoder().decode([GlossaryEntry].self, from: data)) ?? []
+        }
+        set {
+            guard let data = try? JSONEncoder().encode(newValue) else { return }
+            defaults.set(data, forKey: Key.glossaryEntries)
+        }
+    }
+
+    /// Раздел 13.5 ТЗ v1.2: настраиваемые таймауты и лимит вывода с экрана
+    /// «Отладка и расход». Дефолты — те же значения, что раньше были
+    /// захардкожены в `TranslationSession.run()`.
+    public var textFirstByteTimeout: TimeInterval {
+        get { defaults.object(forKey: Key.textFirstByteTimeout) as? TimeInterval ?? 8 }
+        set { defaults.set(newValue, forKey: Key.textFirstByteTimeout) }
+    }
+
+    public var textTotalTimeout: TimeInterval {
+        get { defaults.object(forKey: Key.textTotalTimeout) as? TimeInterval ?? 30 }
+        set { defaults.set(newValue, forKey: Key.textTotalTimeout) }
+    }
+
+    public var imageFirstByteTimeout: TimeInterval {
+        get { defaults.object(forKey: Key.imageFirstByteTimeout) as? TimeInterval ?? 20 }
+        set { defaults.set(newValue, forKey: Key.imageFirstByteTimeout) }
+    }
+
+    public var imageTotalTimeout: TimeInterval {
+        get { defaults.object(forKey: Key.imageTotalTimeout) as? TimeInterval ?? 60 }
+        set { defaults.set(newValue, forKey: Key.imageTotalTimeout) }
+    }
+
+    public var textMaxOutputTokens: Int {
+        get { defaults.object(forKey: Key.textMaxOutputTokens) as? Int ?? 2048 }
+        set { defaults.set(newValue, forKey: Key.textMaxOutputTokens) }
+    }
+
+    public var imageMaxOutputTokens: Int {
+        get { defaults.object(forKey: Key.imageMaxOutputTokens) as? Int ?? 4096 }
+        set { defaults.set(newValue, forKey: Key.imageMaxOutputTokens) }
     }
 
     /// Раздел 8.1/12.3 ТЗ v1.2: редактируемые пользователем промпты. `nil` —

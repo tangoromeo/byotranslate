@@ -23,20 +23,24 @@ public enum TranslationError: Error, Sendable, Equatable {
     case noScreenshotsFound
     case other(code: String?, message: String)
 
+    /// `String` (не `LocalizedStringKey`) — автолокализация `Text` по
+    /// литералу здесь не работает, нужен явный `NSLocalizedString` с
+    /// `bundle: .kit` (код исполняется внутри фреймворка, `Bundle.main` был
+    /// бы бандлом хоста, не Kit).
     public var localizedUserMessage: String {
         switch self {
-        case .missingAPIKey: "Не задан API-ключ"
-        case .authenticationRejected: "Ключ отклонён провайдером"
-        case .rateLimited: "Лимит запросов. Попробуйте через минуту"
-        case .insufficientQuota: "Закончился баланс у провайдера"
-        case .modelUnavailable: "Модель недоступна для этого ключа"
-        case .modelDoesNotSupportImages: "Выбранная модель не понимает изображения"
-        case .streamInterrupted, .timeoutOrNoNetwork: "Нет ответа от провайдера"
-        case .emptyResponse: "Модель вернула пустой ответ"
-        case .imageTooLarge: "Изображение слишком большое"
-        case .noPhotoAccess: "Нет доступа к медиатеке"
-        case .noScreenshotsFound: "Не нашёл ни одного снимка экрана"
-        case .other: "Ошибка перевода"
+        case .missingAPIKey: NSLocalizedString("Не задан API-ключ", bundle: .kit, comment: "")
+        case .authenticationRejected: NSLocalizedString("Ключ отклонён провайдером", bundle: .kit, comment: "")
+        case .rateLimited: NSLocalizedString("Лимит запросов. Попробуйте через минуту", bundle: .kit, comment: "")
+        case .insufficientQuota: NSLocalizedString("Закончился баланс у провайдера", bundle: .kit, comment: "")
+        case .modelUnavailable: NSLocalizedString("Модель недоступна для этого ключа", bundle: .kit, comment: "")
+        case .modelDoesNotSupportImages: NSLocalizedString("Выбранная модель не понимает изображения", bundle: .kit, comment: "")
+        case .streamInterrupted, .timeoutOrNoNetwork: NSLocalizedString("Нет ответа от провайдера", bundle: .kit, comment: "")
+        case .emptyResponse: NSLocalizedString("Модель вернула пустой ответ", bundle: .kit, comment: "")
+        case .imageTooLarge: NSLocalizedString("Изображение слишком большое", bundle: .kit, comment: "")
+        case .noPhotoAccess: NSLocalizedString("Нет доступа к медиатеке", bundle: .kit, comment: "")
+        case .noScreenshotsFound: NSLocalizedString("Не нашёл ни одного снимка экрана", bundle: .kit, comment: "")
+        case .other: NSLocalizedString("Ошибка перевода", bundle: .kit, comment: "")
         }
     }
 
@@ -59,5 +63,26 @@ public enum TranslationError: Error, Sendable, Equatable {
             return code.map { "\($0): \(message)" } ?? message
         }
         return nil
+    }
+
+    /// Раздел 13.5 ТЗ: статус для лога последних запросов — только тег
+    /// случая, никогда текст ошибки провайдера (в нём мог бы просочиться
+    /// фрагмент исходного текста).
+    public var logTag: String {
+        switch self {
+        case .missingAPIKey: "missingAPIKey"
+        case .authenticationRejected: "authenticationRejected"
+        case .rateLimited: "rateLimited"
+        case .insufficientQuota: "insufficientQuota"
+        case .modelUnavailable: "modelUnavailable"
+        case .modelDoesNotSupportImages: "modelDoesNotSupportImages"
+        case .streamInterrupted: "streamInterrupted"
+        case .timeoutOrNoNetwork: "timeoutOrNoNetwork"
+        case .emptyResponse: "emptyResponse"
+        case .imageTooLarge: "imageTooLarge"
+        case .noPhotoAccess: "noPhotoAccess"
+        case .noScreenshotsFound: "noScreenshotsFound"
+        case let .other(code, _): "other" + (code.map { "(\($0))" } ?? "")
+        }
     }
 }

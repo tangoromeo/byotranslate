@@ -18,6 +18,11 @@ public struct ImageTranslationView: View {
     @State private var isShowingNotes = false
     @State private var copiedFeedback = false
 
+    /// Раздел 9 ТЗ (строка 410): иврит/арабский результат — по правому краю.
+    private var isRTLResult: Bool {
+        session.lastTargetLanguage.map(TextDirectionResolver.isRightToLeft) ?? false
+    }
+
     public init(originalImageData: Data, appGroupSuiteName: String) {
         self.originalImageData = originalImageData
         _session = StateObject(wrappedValue: TranslationSession(appGroupSuiteName: appGroupSuiteName))
@@ -34,6 +39,8 @@ public struct ImageTranslationView: View {
                     Text(session.translation.isEmpty ? " " : session.translation)
                         .font(.body)
                         .textSelection(.enabled)
+                        .multilineTextAlignment(isRTLResult ? .trailing : .leading)
+                        .frame(maxWidth: .infinity, alignment: isRTLResult ? .trailing : .leading)
                     if let usedSlot = session.usedSlot, usedSlot == .strong {
                         Text("Точнее — сильная модель")
                             .font(.caption)

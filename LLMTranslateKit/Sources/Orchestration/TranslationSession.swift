@@ -17,11 +17,16 @@ public final class TranslationSession: ObservableObject {
     /// Каким слотом сделан текущий результат — для подписи под переводом
     /// после эскалации (раздел 11.2 ТЗ).
     @Published public private(set) var usedSlot: SlotID?
+    /// Целевой язык текущего результата — раздел 9 ТЗ (строка 410): нужен
+    /// вызывающему UI, чтобы выровнять RTL-результат (иврит/арабский) по
+    /// правому краю.
+    @Published public private(set) var lastTargetLanguage: Locale.Language?
 
     private let appGroupSuiteName: String
     private let keychain = KeychainStore()
     private let cache: TranslationCache
     private let usageCounter: UsageCounter?
+    private let requestLog: RequestLog?
     private var lastContext: RunContext?
     private var lastMode: TranslationMode = .plain
 
@@ -33,6 +38,7 @@ public final class TranslationSession: ObservableObject {
         self.appGroupSuiteName = appGroupSuiteName
         self.cache = TranslationCache(appGroupSuiteName: appGroupSuiteName)
         self.usageCounter = UsageCounter(appGroupSuiteName: appGroupSuiteName)
+        self.requestLog = RequestLog(appGroupSuiteName: appGroupSuiteName)
     }
 
     /// Раздел 11.2 ТЗ: «Если `strong` не настроен, кнопка скрыта»; «повторное
@@ -170,8 +176,8 @@ public final class TranslationSession: ObservableObject {
             return
         }
 
-        let firstByteTimeout: TimeInterval = context.isImage ? 20 : 8
-        let totalTimeout: TimeInterval = context.isImage ? 60 : 30
+        let firstByteTimeout: TimeInterval = context.isImage ? settings.imageFirstByteTimeout : settings.textFirstByteTimeout
+        let totalTimeout: TimeInterval = context.isImage ? settings.imageTotalTimeout : settings.textTotalTimeout
         guard let provider = Self.makeProvider(
             slot: slot,
             apiKey: apiKey,
@@ -191,7 +197,7 @@ public final class TranslationSession: ObservableObject {
             basePromptText: basePromptText,
             notesAddendum: notesAddendum,
             targetLanguage: context.targetLanguage,
-            glossary: [:]
+            glossary: GlossaryEntry.asDictionary(settings.glossaryEntries)
         )
 
         let request = TranslationRequest(
@@ -200,7 +206,7 @@ public final class TranslationSession: ObservableObject {
             targetLanguage: context.targetLanguage,
             mode: mode,
             systemPrompt: systemPrompt,
-            maxOutputTokens: context.isImage ? 4096 : 2048
+            maxOutputTokens: context.isImage ? settings.imageMaxOutputTokens : settings.textMaxOutputTokens
         )
 
         // Раздел 11.4 ТЗ v1.2: кэш только для текста, никогда для изображений.
@@ -223,6 +229,7 @@ public final class TranslationSession: ObservableObject {
             translation = hit.translation
             notes = hit.notes
             usedSlot = slotID
+            lastTargetLanguage = context.targetLanguage
             log.notice("cache hit: slot=\(slotID.rawValue, privacy: .public)")
             return
         }
@@ -267,6 +274,7 @@ public final class TranslationSession: ObservableObject {
             translation = sanitized
             notes = finalNotes
             usedSlot = slotID
+            lastTargetLanguage = context.targetLanguage
 
             // Раздел 11.5 ТЗ: считаются только реально выполненные запросы —
             // попадание в кэш выше возвращается раньше и сюда не доходит.
@@ -279,11 +287,57 @@ public final class TranslationSession: ObservableObject {
             if let cacheKey {
                 cache.set(key: cacheKey, translation: sanitized, notes: finalNotes)
             }
+            logRequest(
+                context: context, slotID: slotID, slot: slot, mode: mode, start: start,
+                status: "success", promptTokens: promptTokens, completionTokens: completionTokens
+            )
         } catch let error as TranslationError {
+            logRequest(
+                context: context, slotID: slotID, slot: slot, mode: mode, start: start,
+                status: error.logTag, promptTokens: promptTokens, completionTokens: completionTokens
+            )
             fail(error)
         } catch {
-            fail(.other(code: nil, message: String(describing: error)))
+            let wrapped = TranslationError.other(code: nil, message: String(describing: error))
+            logRequest(
+                context: context, slotID: slotID, slot: slot, mode: mode, start: start,
+                status: wrapped.logTag, promptTokens: promptTokens, completionTokens: completionTokens
+            )
+            fail(wrapped)
         }
+    }
+
+    /// Раздел 13.5 ТЗ: одна запись на реально выполненную попытку (после
+    /// того как провайдер построен и стрим начат) — валидационные отказы
+    /// до этого момента (нет ключа, нет модели) запросом не были.
+    private func logRequest(
+        context: RunContext,
+        slotID: SlotID,
+        slot: ModelSlotConfig,
+        mode: TranslationMode,
+        start: Date,
+        status: String,
+        promptTokens: Int?,
+        completionTokens: Int?
+    ) {
+        let payloadSize: Int
+        switch context.payload {
+        case let .text(text): payloadSize = text.utf8.count
+        case let .image(data, _): payloadSize = data.count
+        }
+        let latencyMs = Int(Date().timeIntervalSince(start) * 1000)
+        requestLog?.record(RequestLogEntry(
+            slot: slotID,
+            providerID: slot.providerID,
+            model: slot.model,
+            isImage: context.isImage,
+            mode: mode,
+            payloadSizeBytes: payloadSize,
+            latencyMs: latencyMs,
+            status: status,
+            promptTokens: promptTokens,
+            completionTokens: completionTokens
+        ))
     }
 
     private func fail(_ error: TranslationError) {
