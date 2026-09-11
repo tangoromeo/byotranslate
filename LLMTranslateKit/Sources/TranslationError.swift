@@ -14,6 +14,9 @@ public enum TranslationError: Error, Sendable, Equatable {
     case streamInterrupted
     case timeoutOrNoNetwork
     case emptyResponse
+    /// Раздел 10.7 ТЗ: не влезло даже после ступенчатого понижения
+    /// качества/разрешения.
+    case imageTooLarge
     case other(code: String?, message: String)
 
     public var localizedUserMessage: String {
@@ -26,6 +29,7 @@ public enum TranslationError: Error, Sendable, Equatable {
         case .modelDoesNotSupportImages: "Выбранная модель не понимает изображения"
         case .streamInterrupted, .timeoutOrNoNetwork: "Нет ответа от провайдера"
         case .emptyResponse: "Модель вернула пустой ответ"
+        case .imageTooLarge: "Изображение слишком большое"
         case .other: "Ошибка перевода"
         }
     }
@@ -35,7 +39,7 @@ public enum TranslationError: Error, Sendable, Equatable {
     public var isRetryable: Bool {
         switch self {
         case .missingAPIKey, .authenticationRejected, .insufficientQuota,
-             .modelUnavailable, .modelDoesNotSupportImages:
+             .modelUnavailable, .modelDoesNotSupportImages, .imageTooLarge:
             false
         case .rateLimited, .streamInterrupted, .timeoutOrNoNetwork, .emptyResponse, .other:
             true

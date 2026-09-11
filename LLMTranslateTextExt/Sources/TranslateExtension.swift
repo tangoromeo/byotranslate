@@ -1,6 +1,9 @@
 import SwiftUI
 import TranslationUIProvider
 import LLMTranslateKit
+import os.log
+
+private let log = Logger(subsystem: "com.tyrex.llmtranslate", category: "text-translation")
 
 @main
 final class TranslateExtension: TranslationUIProviderExtension {
@@ -26,7 +29,8 @@ struct TranslateSheetView: View {
 
     @State private var translatedText = ""
     @State private var isTranslating = false
-    @State private var errorMessage: String?
+    @State private var currentError: TranslationError?
+    @State private var isShowingDetails = false
 
     private let keychain = KeychainStore()
 
@@ -35,9 +39,19 @@ struct TranslateSheetView: View {
             Text(context.inputText ?? "")
                 .foregroundStyle(.secondary)
 
-            if let errorMessage {
-                Text(errorMessage)
+            if let currentError {
+                Text(currentError.localizedUserMessage)
                     .foregroundStyle(.red)
+                // Раздел 11 ТЗ: «Полный текст ошибки провайдера — в
+                // раскрывающейся секции «Подробности», для отладки».
+                if let details = currentError.details {
+                    DisclosureGroup("Подробности", isExpanded: $isShowingDetails) {
+                        Text(details)
+                            .font(.caption.monospaced())
+                            .textSelection(.enabled)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             } else {
                 Text(translatedText)
                     .font(.headline)
@@ -68,15 +82,15 @@ struct TranslateSheetView: View {
         let original = String(inputText.characters)
 
         guard let settings = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup) else {
-            errorMessage = "App Group не сконфигурирована"
+            fail(.other(code: nil, message: "App Group не сконфигурирована"))
             return
         }
         guard let apiKey = (try? keychain.apiKey(provider: settings.providerID)) ?? nil, !apiKey.isEmpty else {
-            errorMessage = TranslationError.missingAPIKey.localizedUserMessage
+            fail(.missingAPIKey)
             return
         }
         guard !settings.model.isEmpty else {
-            errorMessage = "Модель не выбрана в настройках"
+            fail(.other(code: nil, message: "Модель не выбрана в настройках"))
             return
         }
 
@@ -98,20 +112,33 @@ struct TranslateSheetView: View {
         )
         let provider = OpenAICompatibleProvider(baseURL: settings.baseURL, apiKey: apiKey, model: settings.model)
 
+        log.notice("translate start: baseURL=\(settings.baseURL.absoluteString, privacy: .public) model=\(settings.model, privacy: .public) textLength=\(original.count, privacy: .public)")
         isTranslating = true
         defer { isTranslating = false }
 
         var accumulated = ""
         do {
+            let start = Date()
+            var deltaCount = 0
             for try await delta in provider.translate(request: request) {
+                if deltaCount == 0 {
+                    log.notice("first delta after \(Date().timeIntervalSince(start), privacy: .public)s")
+                }
+                deltaCount += 1
                 accumulated += delta
                 translatedText = accumulated
             }
+            log.notice("stream finished after \(Date().timeIntervalSince(start), privacy: .public)s, \(deltaCount, privacy: .public) deltas")
             translatedText = ResponseSanitizer.sanitize(accumulated, original: original)
         } catch let error as TranslationError {
-            errorMessage = error.localizedUserMessage
+            fail(error)
         } catch {
-            errorMessage = TranslationError.other(code: nil, message: String(describing: error)).localizedUserMessage
+            fail(.other(code: nil, message: String(describing: error)))
         }
+    }
+
+    private func fail(_ error: TranslationError) {
+        log.error("translate failed: \(String(describing: error), privacy: .public)")
+        currentError = error
     }
 }

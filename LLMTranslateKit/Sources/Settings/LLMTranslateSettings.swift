@@ -27,6 +27,7 @@ public final class LLMTranslateSettings: @unchecked Sendable {
         static let model = "model"
         static let primaryTargetLanguage = "primaryTargetLanguage"
         static let secondaryTargetLanguage = "secondaryTargetLanguage"
+        static let supportsImages = "supportsImages"
     }
 
     public var providerID: ProviderID {
@@ -65,5 +66,13 @@ public final class LLMTranslateSettings: @unchecked Sendable {
                 ?? Locale.Language(identifier: "en")
         }
         set { defaults.set(newValue.minimalIdentifier, forKey: Key.secondaryTargetLanguage) }
+    }
+
+    /// Раздел 6.3 ТЗ: «В настройках провайдера — флаг «модель поддерживает
+    /// изображения»». По умолчанию `false` — большинство текстовых моделей
+    /// не мультимодальны, включать должен явно пользователь.
+    public var supportsImages: Bool {
+        get { defaults.bool(forKey: Key.supportsImages) }
+        set { defaults.set(newValue, forKey: Key.supportsImages) }
     }
 }

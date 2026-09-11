@@ -45,6 +45,8 @@ targets:
     dependencies:
       - target: LLMTranslateTextExt
         embed: true
+      - target: LLMTranslateShareExt
+        embed: true
       - target: LLMTranslateKit
         embed: true
     postbuildScripts:
@@ -96,6 +98,48 @@ targets:
         # добавляется отдельной строкой (см. LD_RUNPATH_SEARCH_PATHS в
         # "iOS ExtensionKit Extension Base.xctemplate"), но xcodegen не
         # применяет этот темплейт-дефолт сам по себе.
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
+    dependencies:
+      - target: LLMTranslateKit
+        embed: false
+        link: true
+
+  LLMTranslateShareExt:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LLMTranslateShareExt/Sources
+    info:
+      path: LLMTranslateShareExt/Info.plist
+      properties:
+        CFBundleDisplayName: LLMTranslate
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            # Раздел 10.3 ТЗ: только изображения, максимум одно за раз;
+            # текст сюда не принимаем — для текста работает F1
+            # (TranslationUIProvider).
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsImageWithMaxCount: 1
+    entitlements:
+      path: LLMTranslateShareExt/LLMTranslateShareExt.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tyrex.llmtranslate
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.tyrex.llmtranslate.shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.shareext
+        PRODUCT_NAME: LLMTranslateShareExt
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: false
+        # Тот же фикс, что и у LLMTranslateTextExt — см. комментарий там.
+        # Классическое app-extension тоже embed-ится на два уровня вложенности
+        # (LLMTranslate.app/PlugIns/LLMTranslateShareExt.appex/), поэтому
+        # тот же относительный путь до Frameworks хост-приложения подходит.
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
     dependencies:
       - target: LLMTranslateKit

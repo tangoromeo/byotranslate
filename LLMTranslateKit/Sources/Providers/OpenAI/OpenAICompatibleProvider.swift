@@ -93,12 +93,7 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
                 let status = (response as? HTTPURLResponse)?.statusCode
                 throw RawAttemptFailure(httpStatus: status, underlying: nil, bodyMessage: nil, bodyCode: nil)
             }
-            struct ListResponse: Decodable {
-                struct Model: Decodable { let id: String }
-                let data: [Model]
-            }
-            let decoded = try JSONDecoder().decode(ListResponse.self, from: data)
-            return decoded.data.map { ModelDescriptor(rawID: $0.id) }
+            return try OpenAIModelListParsing.parse(data)
         } catch {
             throw Self.classify(error).0
         }
@@ -107,26 +102,13 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
     // MARK: - Request construction
 
     private func buildRequest(for request: TranslationRequest) throws -> URLRequest {
-        guard case let .text(text) = request.payload else {
-            // Мультимодальные тела запросов — раздел 6.3 ТЗ, этап 3.
-            throw TranslationError.modelDoesNotSupportImages
-        }
-
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent("chat/completions"))
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.timeoutInterval = firstByteTimeout
 
-        let body: [String: Any] = [
-            "model": model,
-            "stream": true,
-            "max_tokens": request.maxOutputTokens,
-            "messages": [
-                ["role": "system", "content": request.systemPrompt],
-                ["role": "user", "content": text],
-            ],
-        ]
+        let body = OpenAIRequestBodyBuilder.body(for: request, model: model)
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
         return urlRequest
     }
