@@ -1,66 +1,28 @@
 import SwiftUI
 import LLMTranslateKit
 
-/// Минимальные настройки этапа 1 (раздел 16 ТЗ: «LLMTranslateKit, Keychain,
-/// OpenAI-совместимый адаптер со стримингом, ... минимальные настройки»).
-/// Полный пятиэкранный хост-интерфейс раздела 12 ТЗ — этап 5.
+/// Раздел 12 ТЗ v1.2: настройки — два слота модели, языки, режим комментариев
+/// и словаря, редакторы промптов. Полный пятиэкранный хост-интерфейс
+/// (онбординг, кэш/счётчик) — этапы 5-7.
 struct SettingsView: View {
     private let settings = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)
-    private let keychain = KeychainStore()
 
-    @State private var baseURLString: String = OpenAICompatibleProvider.defaultBaseURL.absoluteString
-    @State private var model: String = ""
     @State private var primaryTargetCode: String = "ru"
     @State private var secondaryTargetCode: String = "en"
-    /// Раздел 6.3 ТЗ: ручной флаг — единственный источник истины, когда
-    /// список моделей недоступен или сам провайдер не публикует
-    /// модальности (голый OpenAI API, Ollama, LM Studio). Когда модель
-    /// выбрана из списка и он сообщает модальность (например, OpenRouter),
-    /// значение подставляется автоматически в `ModelPickerView.onSelect`
-    /// — пользователю нечего гадать.
-    @State private var supportsImages: Bool = false
-
-    @State private var apiKeyInput: String = ""
-    @State private var storedKeyPreview: String?
-
-    @State private var validationState: ValidationState = .idle
-    @State private var isShowingModelPicker = false
-
-    private enum ValidationState: Equatable {
-        case idle
-        case running
-        case success(String)
-        case failure(String)
-    }
+    @State private var notesMode: NotesMode = .off
+    @State private var dictionaryModeEnabled: Bool = true
+    @State private var showOriginalText: Bool = false
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Провайдер") {
-                    LabeledContent("Тип") { Text("OpenAI-совместимый") }
-                    TextField("Base URL", text: $baseURLString)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    HStack {
-                        TextField("Модель", text: $model)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                        Button("Список") { isShowingModelPicker = true }
-                            .buttonStyle(.borderless)
+                Section("Модели") {
+                    NavigationLink("Рабочая модель (working)") {
+                        SlotSettingsView(slot: .working, title: "Рабочая модель", settings: settings)
                     }
-                    // Раздел 6.3 ТЗ: «флаг «модель поддерживает изображения»» —
-                    // fallback на случай, когда список моделей недоступен или
-                    // не публикует модальности (см. ModelPickerView).
-                    Toggle("Модель понимает изображения", isOn: $supportsImages)
-                }
-
-                Section("API-ключ") {
-                    if let storedKeyPreview {
-                        LabeledContent("Сохранён", value: storedKeyPreview)
+                    NavigationLink("Сильная модель (strong)") {
+                        SlotSettingsView(slot: .strong, title: "Сильная модель", settings: settings)
                     }
-                    SecureField("sk-...", text: $apiKeyInput)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
                 }
 
                 Section("Языки") {
@@ -72,76 +34,194 @@ struct SettingsView: View {
                         .autocorrectionDisabled()
                 }
 
-                Section {
-                    Button("Сохранить") { save() }
-                    Button("Проверить") { Task { await validate() } }
-                        .disabled(validationState == .running)
+                Section("Шторка перевода") {
+                    Toggle("Показывать исходный текст", isOn: $showOriginalText)
                 }
 
-                switch validationState {
-                case .idle:
-                    EmptyView()
-                case .running:
-                    Section { ProgressView() }
-                case let .success(text):
-                    Section("Результат") { Text(text) }
-                case let .failure(message):
-                    Section("Ошибка") {
-                        Text(message).foregroundStyle(.red)
+                Section("Комментарии и словарь") {
+                    Picker("Комментарии модели", selection: $notesMode) {
+                        Text("Не показывать").tag(NotesMode.off)
+                        Text("Для коротких выделений").tag(NotesMode.shortOnly)
+                        Text("Всегда").tag(NotesMode.always)
                     }
+                    Toggle("Словарь для коротких выделений", isOn: $dictionaryModeEnabled)
+                }
+
+                Section("Промпты") {
+                    NavigationLink("Промпт для текста") {
+                        PromptEditorView(
+                            title: "Промпт для текста",
+                            defaultText: PromptBuilder.defaultTextSystemPrompt,
+                            get: { settings?.customTextPrompt },
+                            set: { settings?.customTextPrompt = $0 }
+                        )
+                    }
+                    NavigationLink("Промпт для изображений") {
+                        PromptEditorView(
+                            title: "Промпт для изображений",
+                            defaultText: PromptBuilder.defaultImageSystemPrompt,
+                            get: { settings?.customImagePrompt },
+                            set: { settings?.customImagePrompt = $0 }
+                        )
+                    }
+                    NavigationLink("Надстройка «Пояснить»") {
+                        PromptEditorView(
+                            title: "Надстройка «Пояснить»",
+                            defaultText: PromptBuilder.defaultNotesAddendum,
+                            get: { settings?.customNotesAddendum },
+                            set: { settings?.customNotesAddendum = $0 }
+                        )
+                    }
+                }
+
+                Section {
+                    Button("Сохранить") { save() }
                 }
             }
             .navigationTitle("LLMTranslate")
             .onAppear(perform: load)
-            .sheet(isPresented: $isShowingModelPicker) {
-                ModelPickerView(currentAPIKey: currentAPIKeyForListing(), baseURL: resolvedBaseURL()) { descriptor in
-                    model = descriptor.rawID
-                    // Раздел 6.3 ТЗ: если провайдер сам знает модальность
-                    // (OpenRouter) — не спрашивать пользователя повторно.
-                    // Если не знает (`nil`) — ручной тумблер остаётся как был.
-                    if let known = descriptor.supportsImages {
-                        supportsImages = known
+        }
+    }
+
+    private func load() {
+        guard let settings else { return }
+        primaryTargetCode = settings.primaryTargetLanguage.minimalIdentifier
+        secondaryTargetCode = settings.secondaryTargetLanguage.minimalIdentifier
+        notesMode = settings.notesMode
+        dictionaryModeEnabled = settings.dictionaryModeEnabled
+        showOriginalText = settings.showOriginalTextInSheet
+    }
+
+    private func save() {
+        guard let settings else { return }
+        settings.primaryTargetLanguage = Locale.Language(identifier: primaryTargetCode)
+        settings.secondaryTargetLanguage = Locale.Language(identifier: secondaryTargetCode)
+        settings.notesMode = notesMode
+        settings.dictionaryModeEnabled = dictionaryModeEnabled
+        settings.showOriginalTextInSheet = showOriginalText
+    }
+}
+
+/// Раздел 11.2/12.2 ТЗ v1.2: настройки одного слота — провайдер, base URL,
+/// модель, ключ, флаг мультимодальности, кнопка «Проверить».
+private struct SlotSettingsView: View {
+    let slot: SlotID
+    let title: String
+    let settings: LLMTranslateSettings?
+
+    private let keychain = KeychainStore()
+
+    @State private var providerID: ProviderID = .openAICompatible
+    @State private var baseURLString: String = OpenAICompatibleProvider.defaultBaseURL.absoluteString
+    @State private var model: String = ""
+    @State private var supportsImages: Bool = false
+    @State private var apiKeyInput: String = ""
+    @State private var storedKeyPreview: String?
+    @State private var validationState: ValidationState = .idle
+    @State private var isShowingModelPicker = false
+
+    private enum ValidationState: Equatable {
+        case idle, running
+        case success(String)
+        case failure(String)
+    }
+
+    var body: some View {
+        Form {
+            Section("Провайдер") {
+                Picker("Провайдер", selection: $providerID) {
+                    ForEach(ProviderFactory.allProviders, id: \.self) { id in
+                        Text(ProviderFactory.displayName(for: id)).tag(id)
                     }
-                    isShowingModelPicker = false
                 }
+                .onChange(of: providerID) { _, newValue in
+                    // Раздел 6.4, п. 1 ТЗ: baseURL настраиваемый, но при
+                    // смене провайдера подставляем его дефолт как отправную
+                    // точку — молчаливо оставлять URL прежнего провайдера
+                    // почти наверняка ошибка пользователя.
+                    baseURLString = ProviderFactory.defaultBaseURL(for: newValue).absoluteString
+                }
+                TextField("Base URL", text: $baseURLString)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                HStack {
+                    TextField("Модель", text: $model)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Список") { isShowingModelPicker = true }
+                        .buttonStyle(.borderless)
+                }
+                Toggle("Модель понимает изображения", isOn: $supportsImages)
+            }
+
+            Section("API-ключ") {
+                if let storedKeyPreview {
+                    LabeledContent("Сохранён", value: storedKeyPreview)
+                }
+                SecureField("sk-...", text: $apiKeyInput)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
+
+            Section {
+                Button("Сохранить") { save() }
+                Button("Проверить") { Task { await validate() } }
+                    .disabled(validationState == .running)
+            }
+
+            switch validationState {
+            case .idle: EmptyView()
+            case .running: Section { ProgressView() }
+            case let .success(text): Section("Результат") { Text(text) }
+            case let .failure(message): Section("Ошибка") { Text(message).foregroundStyle(.red) }
+            }
+        }
+        .navigationTitle(title)
+        .onAppear(perform: load)
+        .sheet(isPresented: $isShowingModelPicker) {
+            ModelPickerView(providerID: providerID, currentAPIKey: currentAPIKeyForListing(), baseURL: resolvedBaseURL()) { descriptor in
+                model = descriptor.rawID
+                if let known = descriptor.supportsImages {
+                    supportsImages = known
+                }
+                isShowingModelPicker = false
             }
         }
     }
 
     private func resolvedBaseURL() -> URL {
-        URL(string: baseURLString) ?? OpenAICompatibleProvider.defaultBaseURL
+        URL(string: baseURLString) ?? ProviderFactory.defaultBaseURL(for: providerID)
     }
 
     private func currentAPIKeyForListing() -> String? {
-        guard let settings else { return apiKeyInput.isEmpty ? nil : apiKeyInput }
         if !apiKeyInput.isEmpty { return apiKeyInput }
-        return (try? keychain.apiKey(provider: settings.providerID)) ?? nil
+        return (try? keychain.apiKey(slot: slot)) ?? nil
     }
 
     private func load() {
         guard let settings else { return }
-        baseURLString = settings.baseURL.absoluteString
-        model = settings.model
-        primaryTargetCode = settings.primaryTargetLanguage.minimalIdentifier
-        secondaryTargetCode = settings.secondaryTargetLanguage.minimalIdentifier
-        supportsImages = settings.supportsImages
-        if let key = (try? keychain.apiKey(provider: settings.providerID)) ?? nil, !key.isEmpty {
+        let config = settings.slot(slot)
+        providerID = config.providerID
+        baseURLString = config.baseURL.absoluteString
+        model = config.model
+        supportsImages = config.supportsImages
+        if let key = (try? keychain.apiKey(slot: slot)) ?? nil, !key.isEmpty {
             storedKeyPreview = KeychainStore.maskedPreview(key)
         }
     }
 
     private func save() {
         guard let settings else { return }
+        let config = settings.slot(slot)
+        config.providerID = providerID
         if let url = URL(string: baseURLString) {
-            settings.baseURL = url
+            config.baseURL = url
         }
-        settings.model = model
-        settings.primaryTargetLanguage = Locale.Language(identifier: primaryTargetCode)
-        settings.secondaryTargetLanguage = Locale.Language(identifier: secondaryTargetCode)
-        settings.supportsImages = supportsImages
+        config.model = model
+        config.supportsImages = supportsImages
 
         if !apiKeyInput.isEmpty {
-            try? keychain.setAPIKey(apiKeyInput, provider: settings.providerID)
+            try? keychain.setAPIKey(apiKeyInput, slot: slot)
             storedKeyPreview = KeychainStore.maskedPreview(apiKeyInput)
             apiKeyInput = ""
         }
@@ -150,13 +230,15 @@ struct SettingsView: View {
     /// Раздел 12, экран 2 ТЗ: «Проверить» → тестовый перевод "Hello, world".
     private func validate() async {
         save()
-        guard let settings else { return }
-        guard let apiKey = (try? keychain.apiKey(provider: settings.providerID)) ?? nil, !apiKey.isEmpty else {
+        guard let apiKey = (try? keychain.apiKey(slot: slot)) ?? nil, !apiKey.isEmpty else {
             validationState = .failure(TranslationError.missingAPIKey.localizedUserMessage)
             return
         }
         validationState = .running
-        let provider = OpenAICompatibleProvider(baseURL: settings.baseURL, apiKey: apiKey, model: settings.model)
+        guard let provider = ProviderFactory.make(providerID: providerID, baseURL: resolvedBaseURL(), apiKey: apiKey, model: model) else {
+            validationState = .failure("Провайдер не поддерживается")
+            return
+        }
         do {
             let capabilities = try await provider.validate()
             validationState = .success("Модель \(capabilities.modelID) отвечает.")
@@ -171,8 +253,9 @@ struct SettingsView: View {
 /// Раздел 6.4, п. 2 ТЗ: «Список для выпадающего меню тянуть через
 /// listModels(). Если запрос списка не удался — оставить свободный ввод
 /// строки». Эта шторка — только дополнительное удобство поверх свободного
-/// ввода в `SettingsView`, никогда не единственный путь.
+/// ввода в `SlotSettingsView`, никогда не единственный путь.
 private struct ModelPickerView: View {
+    let providerID: ProviderID
     let currentAPIKey: String?
     let baseURL: URL
     let onSelect: (ModelDescriptor) -> Void
@@ -182,43 +265,67 @@ private struct ModelPickerView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var query = ""
+    /// Раздел 6.3 ТЗ: фильтр, не просто бейдж — иначе список из сотен
+    /// моделей (типично для OpenRouter) невозможно сузить до реально
+    /// нужных, когда слот предназначен для изображений.
+    @State private var imagesOnly = false
 
     private var filteredModels: [ModelDescriptor] {
-        guard !query.isEmpty else { return models }
-        return models.filter { $0.rawID.localizedCaseInsensitiveContains(query) }
+        var result = models
+        if imagesOnly {
+            result = result.filter { $0.supportsImages == true }
+        }
+        guard !query.isEmpty else { return result }
+        return result.filter { $0.rawID.localizedCaseInsensitiveContains(query) }
     }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if isLoading {
-                    ProgressView()
-                } else if let errorMessage {
-                    ContentUnavailableView(errorMessage, systemImage: "exclamationmark.triangle")
-                } else {
-                    List(filteredModels) { descriptor in
-                        Button {
-                            onSelect(descriptor)
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(descriptor.displayName ?? descriptor.rawID)
-                                        .foregroundStyle(.primary)
-                                    if descriptor.displayName != nil {
-                                        Text(descriptor.rawID)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                // Обычная подписанная строка, а не иконка в toolbar — так
+                // видно текущее состояние переключателя, не только клик.
+                if !isLoading, errorMessage == nil {
+                    Toggle("Только с поддержкой изображений", isOn: $imagesOnly)
+                        .padding()
+                    Divider()
+                }
+
+                Group {
+                    if isLoading {
+                        ProgressView()
+                    } else if let errorMessage {
+                        ContentUnavailableView(errorMessage, systemImage: "exclamationmark.triangle")
+                    } else if filteredModels.isEmpty {
+                        ContentUnavailableView(
+                            imagesOnly ? "Нет моделей с поддержкой изображений" : "Ничего не найдено",
+                            systemImage: "magnifyingglass"
+                        )
+                    } else {
+                        List(filteredModels) { descriptor in
+                            Button {
+                                onSelect(descriptor)
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(descriptor.displayName ?? descriptor.rawID)
+                                            .foregroundStyle(.primary)
+                                        if descriptor.displayName != nil {
+                                            Text(descriptor.rawID)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
                                     }
+                                    Spacer()
+                                    modalityBadge(for: descriptor.supportsImages)
                                 }
-                                Spacer()
-                                modalityBadge(for: descriptor.supportsImages)
                             }
                         }
                     }
-                    .searchable(text: $query)
                 }
+                .frame(maxHeight: .infinity)
             }
             .navigationTitle("Модели")
+            .searchable(text: $query, prompt: "Поиск модели")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") { dismiss() }
@@ -246,7 +353,11 @@ private struct ModelPickerView: View {
             isLoading = false
             return
         }
-        let provider = OpenAICompatibleProvider(baseURL: baseURL, apiKey: currentAPIKey, model: "")
+        guard let provider = ProviderFactory.make(providerID: providerID, baseURL: baseURL, apiKey: currentAPIKey, model: "") else {
+            errorMessage = "Провайдер не поддерживается"
+            isLoading = false
+            return
+        }
         do {
             models = try await provider.listModels()
         } catch let error as TranslationError {
@@ -255,6 +366,39 @@ private struct ModelPickerView: View {
             errorMessage = String(describing: error)
         }
         isLoading = false
+    }
+}
+
+/// Раздел 8.1/8.3/12.3 ТЗ v1.2: редактор одного промпта с кнопкой «сбросить
+/// к исходному». `nil` в настройках — используется дефолт из `PromptBuilder`.
+private struct PromptEditorView: View {
+    let title: String
+    let defaultText: String
+    let get: () -> String?
+    let set: (String?) -> Void
+
+    @State private var text: String = ""
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            TextEditor(text: $text)
+                .font(.body.monospaced())
+                .padding(4)
+        }
+        .navigationTitle(title)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Готово") {
+                    set(text == defaultText ? nil : text)
+                    dismiss()
+                }
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Сбросить к исходному") { text = defaultText }
+            }
+        }
+        .onAppear { text = get() ?? defaultText }
     }
 }
 

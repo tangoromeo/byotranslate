@@ -1,14 +1,16 @@
 import Foundation
 
-/// Раздел 6.2/6.4 ТЗ. `baseURL` настраиваемый — даёт поддержку OpenRouter,
-/// Groq, DeepSeek, Azure OpenAI, корпоративных прокси и локального
-/// Ollama/LM Studio без единой строки нового кода.
-public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sendable {
-    public let id: ProviderID = .openAICompatible
+/// Раздел 6.2/6.4 ТЗ v1.2, этап 2. `baseURL` настраиваемый — та же логика,
+/// что у `OpenAICompatibleProvider`: прокси/корпоративные шлюзы без нового
+/// кода. Стриминговая инфраструктура (byte-buffering, ретраи, классификация
+/// ошибок) — общая, `Providers/Shared/SSEStreamRunner.swift`.
+public final class AnthropicProvider: TranslationProvider, @unchecked Sendable {
+    public let id: ProviderID = .anthropic
 
     private let baseURL: URL
     private let apiKey: String
     private let model: String
+    private let anthropicVersion: String
     private let firstByteTimeout: TimeInterval
     private let totalTimeout: TimeInterval
 
@@ -16,17 +18,19 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
         baseURL: URL,
         apiKey: String,
         model: String,
+        anthropicVersion: String = "2023-06-01",
         firstByteTimeout: TimeInterval = 8,
         totalTimeout: TimeInterval = 30
     ) {
         self.baseURL = baseURL
         self.apiKey = apiKey
         self.model = model
+        self.anthropicVersion = anthropicVersion
         self.firstByteTimeout = firstByteTimeout
         self.totalTimeout = totalTimeout
     }
 
-    public static let defaultBaseURL = URL(string: "https://api.openai.com/v1")!
+    public static let defaultBaseURL = URL(string: "https://api.anthropic.com/v1")!
 
     // MARK: - TranslationProvider
 
@@ -86,14 +90,22 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
     public func listModels() async throws -> [ModelDescriptor] {
         guard !apiKey.isEmpty else { throw TranslationError.missingAPIKey }
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent("models"))
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        urlRequest.setValue(anthropicVersion, forHTTPHeaderField: "anthropic-version")
         do {
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 let status = (response as? HTTPURLResponse)?.statusCode
                 throw RawAttemptFailure(httpStatus: status, underlying: nil, bodyMessage: nil, bodyCode: nil)
             }
-            return try OpenAIModelListParsing.parse(data)
+            struct ListResponse: Decodable {
+                struct Model: Decodable { let id: String; let displayName: String?
+                    enum CodingKeys: String, CodingKey { case id; case displayName = "display_name" }
+                }
+                let data: [Model]
+            }
+            let decoded = try JSONDecoder().decode(ListResponse.self, from: data)
+            return decoded.data.map { ModelDescriptor(rawID: $0.id, displayName: $0.displayName) }
         } catch {
             throw ProviderErrorClassifier.classify(error).0
         }
@@ -102,13 +114,14 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
     // MARK: - Request construction
 
     private func buildRequest(for request: TranslationRequest) throws -> URLRequest {
-        var urlRequest = URLRequest(url: baseURL.appendingPathComponent("chat/completions"))
+        var urlRequest = URLRequest(url: baseURL.appendingPathComponent("messages"))
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        urlRequest.setValue(anthropicVersion, forHTTPHeaderField: "anthropic-version")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.timeoutInterval = firstByteTimeout
 
-        let body = OpenAIRequestBodyBuilder.body(for: request, model: model)
+        let body = AnthropicRequestBodyBuilder.body(for: request, model: model)
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
         return urlRequest
     }
@@ -121,7 +134,7 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
             firstByteTimeout: firstByteTimeout,
             totalTimeout: totalTimeout,
             completionPolicy: .requiresSentinel,
-            lineParser: OpenAISSELineParser(),
+            lineParser: AnthropicSSELineParser(),
             parseErrorBody: Self.parseErrorBody,
             onEvent: onEvent
         )
@@ -129,34 +142,20 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
 
     private static func parseErrorBody(_ data: Data) -> (message: String?, code: String?) {
         struct ErrorBody: Decodable {
-            struct Body: Decodable { let message: String; let code: String? }
+            struct Body: Decodable { let type: String; let message: String }
             let error: Body
         }
         guard let decoded = try? JSONDecoder().decode(ErrorBody.self, from: data) else {
             return (String(data: data, encoding: .utf8), nil)
         }
-        return (decoded.error.message, decoded.error.code)
+        return (decoded.error.message, decoded.error.type)
     }
 }
 
-/// `onDelta` вызывается последовательно с delegate queue одной сетевой
-/// попытки, а читается уже после того, как `runOneAttempt` вернула
-/// управление (успешно или с ошибкой) — конкурентного доступа в реальности
-/// нет, но `@Sendable`-замыкание этого не знает статически.
+/// См. комментарий у одноимённого типа в `OpenAICompatibleProvider.swift` —
+/// тот же приём, повторён здесь, а не расшарен, чтобы не создавать связность
+/// между независимыми адаптерами ради одного `Bool`-флага.
 private final class YieldedFlag: @unchecked Sendable {
     private(set) var value = false
     func markYielded() { value = true }
-}
-
-/// Адаптер `OpenAIStreamLineParser` (раздел 6.2 ТЗ) под общий протокол
-/// `SSEProviderLineParser` из `Providers/Shared/SSEStreamRunner.swift`.
-private struct OpenAISSELineParser: SSEProviderLineParser {
-    func parse(line: String) throws -> SSELineEvent? {
-        guard let event = try OpenAIStreamLineParser.parse(line: line) else { return nil }
-        switch event {
-        case let .contentDelta(text): return .delta(text)
-        case .done: return .streamDone
-        case let .serverError(code, message): return .serverError(code: code, message: message)
-        }
-    }
 }

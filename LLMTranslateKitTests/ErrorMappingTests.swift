@@ -4,7 +4,7 @@ import XCTest
 /// Раздел 14, п. 4 ТЗ: маппинг ошибок по коду и телу ответа (раздел 11 ТЗ).
 final class ErrorMappingTests: XCTestCase {
     private func classify(status: Int, bodyMessage: String? = nil, bodyCode: String? = nil) -> (TranslationError, Bool) {
-        OpenAICompatibleProvider.classify(RawAttemptFailure(httpStatus: status, underlying: nil, bodyMessage: bodyMessage, bodyCode: bodyCode))
+        ProviderErrorClassifier.classify(RawAttemptFailure(httpStatus: status, underlying: nil, bodyMessage: bodyMessage, bodyCode: bodyCode))
     }
 
     func test_401_mapsToAuthenticationRejected_notRetryable() {
@@ -57,7 +57,7 @@ final class ErrorMappingTests: XCTestCase {
 
     func test_networkError_mapsToTimeoutOrNoNetwork_isRetryable() {
         let raw = RawAttemptFailure(httpStatus: nil, underlying: URLError(.notConnectedToInternet), bodyMessage: nil, bodyCode: nil)
-        let (error, canRetry) = OpenAICompatibleProvider.classify(raw)
+        let (error, canRetry) = ProviderErrorClassifier.classify(raw)
         XCTAssertEqual(error, .timeoutOrNoNetwork)
         XCTAssertTrue(canRetry)
     }
@@ -72,7 +72,7 @@ final class ErrorMappingTests: XCTestCase {
     /// случай, когда до первого символа не доходит вовсе).
     func test_timeoutAfterSuccessfulStatus_isNotMisclassifiedAsHTTPSuccess() {
         let raw = RawAttemptFailure(httpStatus: 200, underlying: URLError(.timedOut), bodyMessage: nil, bodyCode: nil)
-        let (error, canRetry) = OpenAICompatibleProvider.classify(raw)
+        let (error, canRetry) = ProviderErrorClassifier.classify(raw)
         XCTAssertEqual(error, .timeoutOrNoNetwork)
         XCTAssertTrue(canRetry)
     }
@@ -82,19 +82,19 @@ final class ErrorMappingTests: XCTestCase {
         // должен попадать в RawAttemptFailure вовсе), но не должно и путать
         // с HTTP-ошибкой, если вдруг случится.
         let raw = RawAttemptFailure(httpStatus: 200, underlying: nil, bodyMessage: nil, bodyCode: nil)
-        let (error, canRetry) = OpenAICompatibleProvider.classify(raw)
+        let (error, canRetry) = ProviderErrorClassifier.classify(raw)
         XCTAssertEqual(error, .other(code: nil, message: "unknown request failure"))
         XCTAssertFalse(canRetry)
     }
 
     func test_streamInterrupted_isNotAutoRetried() {
-        let (error, canRetry) = OpenAICompatibleProvider.classify(TranslationError.streamInterrupted)
+        let (error, canRetry) = ProviderErrorClassifier.classify(TranslationError.streamInterrupted)
         XCTAssertEqual(error, .streamInterrupted)
         XCTAssertFalse(canRetry, "уже частично начатый ответ не ретраим автоматически")
     }
 
     func test_missingAPIKey_passesThroughUnchanged() {
-        let (error, canRetry) = OpenAICompatibleProvider.classify(TranslationError.missingAPIKey)
+        let (error, canRetry) = ProviderErrorClassifier.classify(TranslationError.missingAPIKey)
         XCTAssertEqual(error, .missingAPIKey)
         XCTAssertFalse(canRetry)
     }

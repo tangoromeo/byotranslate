@@ -1,9 +1,6 @@
 import SwiftUI
 import TranslationUIProvider
 import LLMTranslateKit
-import os.log
-
-private let log = Logger(subsystem: "com.tyrex.llmtranslate", category: "text-translation")
 
 @main
 final class TranslateExtension: TranslationUIProviderExtension {
@@ -27,118 +24,130 @@ final class TranslateExtension: TranslationUIProviderExtension {
 struct TranslateSheetView: View {
     nonisolated(unsafe) let context: any TranslationUIProviderContext
 
-    @State private var translatedText = ""
-    @State private var isTranslating = false
-    @State private var currentError: TranslationError?
+    @StateObject private var session: TranslationSession
     @State private var isShowingDetails = false
+    @State private var isShowingNotes = false
+    @State private var showOriginalText = false
+    @State private var isLongText = false
 
-    private let keychain = KeychainStore()
+    // Явный init, а не значение по умолчанию у @StateObject: дефолтное
+    // значение сделало бы синтезированный memberwise init MainActor-
+    // изолированным (TranslationSession — @MainActor), что ломает вызов
+    // `TranslateSheetView(context:)` из незолированного замыкания SDK
+    // (см. комментарий про Swift 6 strict concurrency выше).
+    nonisolated init(context: any TranslationUIProviderContext) {
+        self.context = context
+        _session = StateObject(wrappedValue: TranslationSession(appGroupSuiteName: SharedIdentifiers.appGroup))
+    }
+
+    /// Раздел 9 ТЗ: «Длинный текст: шторка скроллится, автоматически
+    /// вызывать expandSheet(), если исходный текст длиннее 200 символов».
+    private static let expandThreshold = 200
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(context.inputText ?? "")
-                .foregroundStyle(.secondary)
-
-            if let currentError {
-                Text(currentError.localizedUserMessage)
-                    .foregroundStyle(.red)
-                // Раздел 11 ТЗ: «Полный текст ошибки провайдера — в
-                // раскрывающейся секции «Подробности», для отладки».
-                if let details = currentError.details {
-                    DisclosureGroup("Подробности", isExpanded: $isShowingDetails) {
-                        Text(details)
-                            .font(.caption.monospaced())
-                            .textSelection(.enabled)
-                            .foregroundStyle(.secondary)
-                    }
+        Group {
+            if isLongText {
+                // Раздел 9 ТЗ: для длинного текста уже вызван expandSheet()
+                // — система сама даёт шторке полноэкранный контейнер, внутри
+                // которого ScrollView занимает всё доступное место и
+                // прижимает контент к верху. Ограничение по высоте здесь не
+                // нужно (и вредно — оно центрировало ScrollView в большом
+                // контейнере, оставляя пустоту сверху); оно нужно только в
+                // ветке ниже, где expandSheet() не вызывается вовсе.
+                ScrollView {
+                    content
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
-                Text(translatedText)
-                    .font(.headline)
-                if isTranslating {
-                    ProgressView()
-                }
+                content
             }
-
-            Button {
-                // Расхождение п. 4.5 ТЗ разрешено: SDK-интерфейс
-                // (arm64e-apple-ios.swiftinterface), справочник фреймворка
-                // TranslationUIProviderContext и штатный Xcode-темплейт
-                // "Translation Provider Extension" сходятся на
-                // `finish(translation:)`.
-                context.finish(translation: AttributedString(translatedText))
-            } label: {
-                Text("Заменить")
-            }
-            .disabled(!context.allowsReplacement || translatedText.isEmpty)
         }
-        .padding(8)
         // Раздел 9 ТЗ: перевод стартует автоматически при появлении шторки.
         .task { await translate() }
     }
 
-    private func translate() async {
-        guard let inputText = context.inputText, !inputText.characters.isEmpty else { return }
-        let original = String(inputText.characters)
-
-        guard let settings = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup) else {
-            fail(.other(code: nil, message: "App Group не сконфигурирована"))
-            return
-        }
-        guard let apiKey = (try? keychain.apiKey(provider: settings.providerID)) ?? nil, !apiKey.isEmpty else {
-            fail(.missingAPIKey)
-            return
-        }
-        guard !settings.model.isEmpty else {
-            fail(.other(code: nil, message: "Модель не выбрана в настройках"))
-            return
-        }
-
-        let pair = LocalLanguageDetector.resolvePair(
-            for: original,
-            primaryTarget: settings.primaryTargetLanguage,
-            secondaryTarget: settings.secondaryTargetLanguage
-        )
-        let systemPrompt = PromptBuilder.render(
-            template: PromptBuilder.defaultTextSystemPrompt,
-            targetLanguage: pair.targetLanguage,
-            glossary: [:]
-        )
-        let request = TranslationRequest(
-            payload: .text(original),
-            detectedSourceLanguage: pair.detectedSourceLanguage,
-            targetLanguage: pair.targetLanguage,
-            systemPrompt: systemPrompt
-        )
-        let provider = OpenAICompatibleProvider(baseURL: settings.baseURL, apiKey: apiKey, model: settings.model)
-
-        log.notice("translate start: baseURL=\(settings.baseURL.absoluteString, privacy: .public) model=\(settings.model, privacy: .public) textLength=\(original.count, privacy: .public)")
-        isTranslating = true
-        defer { isTranslating = false }
-
-        var accumulated = ""
-        do {
-            let start = Date()
-            var deltaCount = 0
-            for try await delta in provider.translate(request: request) {
-                if deltaCount == 0 {
-                    log.notice("first delta after \(Date().timeIntervalSince(start), privacy: .public)s")
-                }
-                deltaCount += 1
-                accumulated += delta
-                translatedText = accumulated
+    @ViewBuilder
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if showOriginalText {
+                Text(context.inputText ?? "")
+                    .foregroundStyle(.secondary)
             }
-            log.notice("stream finished after \(Date().timeIntervalSince(start), privacy: .public)s, \(deltaCount, privacy: .public) deltas")
-            translatedText = ResponseSanitizer.sanitize(accumulated, original: original)
-        } catch let error as TranslationError {
-            fail(error)
-        } catch {
-            fail(.other(code: nil, message: String(describing: error)))
+
+            if let currentError = session.currentError {
+                errorSection(currentError)
+            } else {
+                Text(session.translation)
+                    .font(.body)
+                if let usedSlot = session.usedSlot, usedSlot == .strong {
+                    Text("Точнее — сильная модель")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if session.isTranslating {
+                    ProgressView()
+                }
+                if !session.notes.isEmpty {
+                    DisclosureGroup("Пояснения (\(session.notes.count))", isExpanded: $isShowingNotes) {
+                        ForEach(Array(session.notes.enumerated()), id: \.offset) { _, note in
+                            Text(note).font(.caption)
+                        }
+                    }
+                }
+            }
+
+            HStack {
+                Button {
+                    // Расхождение п. 4.5 ТЗ разрешено: SDK-интерфейс
+                    // (arm64e-apple-ios.swiftinterface), справочник фреймворка
+                    // TranslationUIProviderContext и штатный Xcode-темплейт
+                    // "Translation Provider Extension" сходятся на
+                    // `finish(translation:)`.
+                    context.finish(translation: AttributedString(session.translation))
+                } label: {
+                    Text("Заменить")
+                }
+                .disabled(!context.allowsReplacement || session.translation.isEmpty)
+
+                if session.canEscalate {
+                    Button("Точнее") { Task { await session.escalateToStrong() } }
+                }
+                if session.canRequestNotes {
+                    Button("Пояснить") { Task { await session.requestNotes() } }
+                }
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Раздел 11 ТЗ: «Полный текст ошибки провайдера — в раскрывающейся
+    /// секции «Подробности», для отладки».
+    @ViewBuilder
+    private func errorSection(_ error: TranslationError) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(error.localizedUserMessage)
+                .foregroundStyle(.red)
+            if let details = error.details {
+                DisclosureGroup("Подробности", isExpanded: $isShowingDetails) {
+                    Text(details)
+                        .font(.caption.monospaced())
+                        .textSelection(.enabled)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 
-    private func fail(_ error: TranslationError) {
-        log.error("translate failed: \(String(describing: error), privacy: .public)")
-        currentError = error
+    private func translate() async {
+        showOriginalText = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.showOriginalTextInSheet ?? false
+
+        guard let inputText = context.inputText, !inputText.characters.isEmpty else { return }
+        let original = String(inputText.characters)
+        if original.count > Self.expandThreshold {
+            isLongText = true
+            context.expandSheet()
+        }
+        await session.startText(original)
     }
 }

@@ -1,10 +1,11 @@
 import Foundation
 
-/// Раздел 6.2/6.4 ТЗ. `baseURL` настраиваемый — даёт поддержку OpenRouter,
-/// Groq, DeepSeek, Azure OpenAI, корпоративных прокси и локального
-/// Ollama/LM Studio без единой строки нового кода.
-public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sendable {
-    public let id: ProviderID = .openAICompatible
+/// Раздел 6.2/6.4 ТЗ v1.2, этап 2. `baseURL` настраиваемый, как у остальных
+/// двух адаптеров. **Важно**: `?alt=sse` в URL обязателен — без него
+/// `streamGenerateContent` отдаёт один JSON-массив, не построчный SSE (это
+/// расхождение с таблицей ТЗ, обнаружено и зафиксировано при реализации).
+public final class GeminiProvider: TranslationProvider, @unchecked Sendable {
+    public let id: ProviderID = .googleGemini
 
     private let baseURL: URL
     private let apiKey: String
@@ -26,7 +27,7 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
         self.totalTimeout = totalTimeout
     }
 
-    public static let defaultBaseURL = URL(string: "https://api.openai.com/v1")!
+    public static let defaultBaseURL = URL(string: "https://generativelanguage.googleapis.com/v1beta")!
 
     // MARK: - TranslationProvider
 
@@ -86,14 +87,24 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
     public func listModels() async throws -> [ModelDescriptor] {
         guard !apiKey.isEmpty else { throw TranslationError.missingAPIKey }
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent("models"))
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
         do {
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 let status = (response as? HTTPURLResponse)?.statusCode
                 throw RawAttemptFailure(httpStatus: status, underlying: nil, bodyMessage: nil, bodyCode: nil)
             }
-            return try OpenAIModelListParsing.parse(data)
+            struct ListResponse: Decodable {
+                struct Model: Decodable { let name: String; let displayName: String? }
+                let models: [Model]
+            }
+            let decoded = try JSONDecoder().decode(ListResponse.self, from: data)
+            return decoded.models.map {
+                // `name` приходит как "models/gemini-2.5-flash" — префикс не
+                // часть идентификатора модели, который идёт в URL запроса.
+                let rawID = $0.name.hasPrefix("models/") ? String($0.name.dropFirst("models/".count)) : $0.name
+                return ModelDescriptor(rawID: rawID, displayName: $0.displayName)
+            }
         } catch {
             throw ProviderErrorClassifier.classify(error).0
         }
@@ -102,13 +113,24 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
     // MARK: - Request construction
 
     private func buildRequest(for request: TranslationRequest) throws -> URLRequest {
-        var urlRequest = URLRequest(url: baseURL.appendingPathComponent("chat/completions"))
+        guard var components = URLComponents(
+            url: baseURL.appendingPathComponent("models/\(model):streamGenerateContent"),
+            resolvingAgainstBaseURL: false
+        ) else {
+            throw TranslationError.other(code: nil, message: "invalid Gemini URL")
+        }
+        components.queryItems = [URLQueryItem(name: "alt", value: "sse")]
+        guard let url = components.url else {
+            throw TranslationError.other(code: nil, message: "invalid Gemini URL")
+        }
+
+        var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.timeoutInterval = firstByteTimeout
 
-        let body = OpenAIRequestBodyBuilder.body(for: request, model: model)
+        let body = GeminiRequestBodyBuilder.body(for: request)
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
         return urlRequest
     }
@@ -120,8 +142,8 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
             urlRequest: urlRequest,
             firstByteTimeout: firstByteTimeout,
             totalTimeout: totalTimeout,
-            completionPolicy: .requiresSentinel,
-            lineParser: OpenAISSELineParser(),
+            completionPolicy: .closeIsSuccess,
+            lineParser: GeminiSSELineParser(),
             parseErrorBody: Self.parseErrorBody,
             onEvent: onEvent
         )
@@ -129,34 +151,18 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
 
     private static func parseErrorBody(_ data: Data) -> (message: String?, code: String?) {
         struct ErrorBody: Decodable {
-            struct Body: Decodable { let message: String; let code: String? }
+            struct Body: Decodable { let message: String; let status: String? }
             let error: Body
         }
         guard let decoded = try? JSONDecoder().decode(ErrorBody.self, from: data) else {
             return (String(data: data, encoding: .utf8), nil)
         }
-        return (decoded.error.message, decoded.error.code)
+        return (decoded.error.message, decoded.error.status)
     }
 }
 
-/// `onDelta` вызывается последовательно с delegate queue одной сетевой
-/// попытки, а читается уже после того, как `runOneAttempt` вернула
-/// управление (успешно или с ошибкой) — конкурентного доступа в реальности
-/// нет, но `@Sendable`-замыкание этого не знает статически.
+/// См. комментарий у одноимённого типа в `OpenAICompatibleProvider.swift`.
 private final class YieldedFlag: @unchecked Sendable {
     private(set) var value = false
     func markYielded() { value = true }
-}
-
-/// Адаптер `OpenAIStreamLineParser` (раздел 6.2 ТЗ) под общий протокол
-/// `SSEProviderLineParser` из `Providers/Shared/SSEStreamRunner.swift`.
-private struct OpenAISSELineParser: SSEProviderLineParser {
-    func parse(line: String) throws -> SSELineEvent? {
-        guard let event = try OpenAIStreamLineParser.parse(line: line) else { return nil }
-        switch event {
-        case let .contentDelta(text): return .delta(text)
-        case .done: return .streamDone
-        case let .serverError(code, message): return .serverError(code: code, message: message)
-        }
-    }
 }

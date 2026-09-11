@@ -26,14 +26,17 @@ public struct KeychainStore: Sendable {
         self.accessGroup = accessGroup
     }
 
-    private func service(for provider: ProviderID) -> String {
-        "com.tyrex.llmtranslate.apikey.\(provider.rawValue)"
+    // Раздел 5 ТЗ v1.2: ключ адресуется по слоту (`working`/`strong`), не по
+    // провайдеру — слот однозначно определяет, какой ключ имеется в виду,
+    // даже если пользователь сменит провайдера внутри слота.
+    private func service(for slot: SlotID) -> String {
+        "com.tyrex.llmtranslate.apikey.\(slot.rawValue)"
     }
 
-    private func baseQuery(for provider: ProviderID) -> [String: Any] {
+    private func baseQuery(for slot: SlotID) -> [String: Any] {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service(for: provider),
+            kSecAttrService as String: service(for: slot),
         ]
         if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
@@ -41,13 +44,13 @@ public struct KeychainStore: Sendable {
         return query
     }
 
-    public func setAPIKey(_ key: String, provider: ProviderID) throws {
+    public func setAPIKey(_ key: String, slot: SlotID) throws {
         // Раздел 5 ТЗ: сначала удалить существующую запись, затем вставить
         // новую — SecItemUpdate не даёт поменять kSecAttrAccessible задним
         // числом так же надёжно, как add-после-delete.
-        SecItemDelete(baseQuery(for: provider) as CFDictionary)
+        SecItemDelete(baseQuery(for: slot) as CFDictionary)
 
-        var attributes = baseQuery(for: provider)
+        var attributes = baseQuery(for: slot)
         attributes[kSecValueData as String] = Data(key.utf8)
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         attributes[kSecAttrSynchronizable as String] = false
@@ -57,8 +60,8 @@ public struct KeychainStore: Sendable {
     }
 
     /// `nil`, если ключ не задан. Никогда не возвращает пустую строку как "нет ключа".
-    public func apiKey(provider: ProviderID) throws -> String? {
-        var query = baseQuery(for: provider)
+    public func apiKey(slot: SlotID) throws -> String? {
+        var query = baseQuery(for: slot)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
 
@@ -70,8 +73,8 @@ public struct KeychainStore: Sendable {
         return String(decoding: data, as: UTF8.self)
     }
 
-    public func deleteAPIKey(provider: ProviderID) throws {
-        let status = SecItemDelete(baseQuery(for: provider) as CFDictionary)
+    public func deleteAPIKey(slot: SlotID) throws {
+        let status = SecItemDelete(baseQuery(for: slot) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw StoreError.osStatus(status)
         }
