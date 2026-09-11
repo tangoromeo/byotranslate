@@ -81,10 +81,18 @@
 "Если сразу переключателя нет:" = "If the toggle isn't there right away:";
 "Настройки → Приложения → Приложения по умолчанию → Перевод → BYO Translate" = "Settings → Apps → Default Apps → Translation → BYO Translate";
 "Как назначить стандартным переводчиком" = "How to set as the default translator";
-"1. Настройки → Пункт управления → добавить «Перевести скриншот»." = "1. Settings → Control Center → add \"Translate Screenshot.\"";
-"2. Настройки → Кнопка действия → выбрать «Перевести скриншот» (если на устройстве есть кнопка «Действие»)." = "2. Settings → Action Button → choose \"Translate Screenshot\" (if your device has an Action Button).";
-"3. Обе команды доступны в приложении «Команды» сразу после установки — можно вызывать голосом через Siri или собрать в свою автоматизацию." = "3. Both shortcuts are available in the Shortcuts app right after install — call them by voice with Siri or use them in your own automations.";
 "Автоматизация: скриншоты" = "Automation: screenshots";
+"Два варианта — в зависимости от того, важно ли не сохранять скриншот в «Фото»." = "Two options, depending on whether it matters to you not to save the screenshot to Photos.";
+"Быстрый вариант — через «Фото»" = "Quick option — via Photos";
+"Команда «Перевести скриншот» сама берёт последний снимок из «Фото» — собирать ничего не нужно, готова сразу:" = "The \"Translate Screenshot\" shortcut grabs the latest screenshot from Photos itself — nothing to build, ready right away:";
+"1. Настройки → Пункт управления → добавить «Перевести скриншот»." = "1. Settings → Control Center → add \"Translate Screenshot.\"";
+"2. Или: Настройки → Кнопка действия → выбрать «Перевести скриншот» (если на устройстве есть кнопка «Действие»)." = "2. Or: Settings → Action Button → choose \"Translate Screenshot\" (if your device has an Action Button).";
+"Без сохранения в «Фото»" = "Without saving to Photos";
+"Команда «Перевести изображение» сама по себе не запускается — она принимает изображение из предыдущего шага. Чтобы получить снимок экрана, не сохраняя его в «Фото», нужно один раз собрать свою команду:" = "The \"Translate Image\" shortcut doesn't run on its own — it takes an image from the previous step. To capture a screenshot without saving it to Photos, build your own shortcut once:";
+"1. Приложение «Команды» → «+» → добавить действие «Сделать снимок экрана»." = "1. Shortcuts app → \"+\" → add the \"Take Screenshot\" action.";
+"2. Следующим действием добавить «Перевести изображение» (BYO Translate)." = "2. Add \"Translate Image\" (BYO Translate) as the next action.";
+"3. Назначить получившуюся команду на кнопку «Действие» или в Пункт управления — так же, как обычную." = "3. Assign the resulting shortcut to the Action Button or Control Center — same as any other shortcut.";
+"Обе команды («Перевести скриншот» и «Перевести изображение») видны в приложении «Команды» сразу после установки — можно вызывать их голосом через Siri." = "Both shortcuts (\"Translate Screenshot\" and \"Translate Image\") show up in the Shortcuts app right after install — you can also call them by voice with Siri.";
 "Выделенный текст и изображения отправляются напрямую на endpoint, который вы указали в настройках модели — и никуда больше. Ключ хранится в Keychain, не в логах и не в файлах. Кэш переводов (по умолчанию выключен) — единственное исключение из «ничего не сохраняется на диске»: если включить, переводы текста хранятся зашифрованными сутки, чтобы повтор того же текста был мгновенным." = "Selected text and images are sent directly to the endpoint you set in the model settings — and nowhere else. The key is stored in Keychain, never in logs or files. The translation cache (off by default) is the only exception to \"nothing is stored on disk\": if enabled, text translations are kept encrypted for 24 hours, so repeating the same text is instant.";
 "Приватность" = "Privacy";
 

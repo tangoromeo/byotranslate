@@ -105,10 +105,12 @@ struct TranslateSheetView: View {
                 }
             }
 
-            // Раздел 9 ТЗ («Копировать», «Заменить») + «Поделиться» по
-            // просьбе пользователя (см. BACKLOG.md B5). Обёрнуто в
-            // горизонтальный скролл — в компактной шторке пять кнопок в
-            // обычном HStack не помещаются при крупном Dynamic Type.
+            // Раздел 9 ТЗ («Копировать», «Заменить») + «Поделиться»/«Ещё раз»
+            // по образцу ImageTranslationView — тот же набор кнопок и тот же
+            // стиль (только иконка, без текста), которого раньше здесь не
+            // было (см. BACKLOG.md B5). Обёрнуто в горизонтальный скролл —
+            // даже с иконками шесть кнопок не гарантированно помещаются при
+            // крупном Dynamic Type.
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     Button {
@@ -119,7 +121,7 @@ struct TranslateSheetView: View {
                         // `finish(translation:)`.
                         context.finish(translation: AttributedString(session.translation))
                     } label: {
-                        Text("Заменить")
+                        Label("Заменить", systemImage: "checkmark.circle")
                     }
                     .disabled(!context.allowsReplacement || session.translation.isEmpty)
 
@@ -128,23 +130,36 @@ struct TranslateSheetView: View {
                         copiedFeedback = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedFeedback = false }
                     } label: {
-                        Text(copiedFeedback ? "Скопировано" : "Копировать")
+                        Label(copiedFeedback ? "Скопировано" : "Копировать", systemImage: "doc.on.doc")
                     }
                     .disabled(session.translation.isEmpty)
 
                     if !session.translation.isEmpty {
                         ShareLink(item: session.translation) {
-                            Text("Поделиться")
+                            Label("Поделиться", systemImage: "square.and.arrow.up")
                         }
                     }
 
                     if session.canEscalate {
-                        Button("Точнее") { Task { await session.escalateToStrong() } }
+                        Button { Task { await session.escalateToStrong() } } label: {
+                            Label("Точнее", systemImage: "sparkles")
+                        }
                     }
                     if session.canRequestNotes {
-                        Button("Пояснить") { Task { await session.requestNotes() } }
+                        Button { Task { await session.requestNotes() } } label: {
+                            Label("Пояснить", systemImage: "text.bubble")
+                        }
                     }
+
+                    Button {
+                        Task { await session.retry() }
+                    } label: {
+                        Label("Ещё раз", systemImage: "arrow.clockwise")
+                    }
+                    .disabled(session.isTranslating)
                 }
+                .labelStyle(.iconOnly)
+                .font(.title3)
             }
         }
         .padding(8)

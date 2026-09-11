@@ -65,7 +65,16 @@ public struct ImageTranslationView: View {
         .sheet(isPresented: $isShowingOriginal) {
             originalImageSheet
         }
-        .task { await session.startImage(originalImageData) }
+        // `id:` обязателен: без него .task привязан к идентичности вью, не к
+        // originalImageData. ContentView держит fullScreenCover открытым
+        // между запусками E2/E3 — если команда срабатывает второй раз, пока
+        // шторка от первого перевода ещё не закрыта, SwiftUI не пересоздаёт
+        // ImageTranslationView (та же позиция в дереве), а просто обновляет
+        // originalImageData на новое значение. Без id thumbnail (читает
+        // originalImageData напрямую) показывает новую картинку, а
+        // session.translation остаётся от предыдущей — задача не
+        // перезапускается сама по себе.
+        .task(id: originalImageData) { await session.startImage(originalImageData) }
     }
 
     /// Раздел 11 ТЗ: «Полный текст ошибки провайдера — в раскрывающейся
