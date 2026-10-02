@@ -120,6 +120,8 @@ targets:
       path: LLMTranslateTextExt/Info.plist
       properties:
         CFBundleDisplayName: BYO Translate Text
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.public.translation-ui-provider
     entitlements:
@@ -173,6 +175,8 @@ targets:
       path: LLMTranslateShareExt/Info.plist
       properties:
         CFBundleDisplayName: BYO Translate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
@@ -232,6 +236,8 @@ targets:
       path: LLMTranslateControl/Info.plist
       properties:
         CFBundleDisplayName: BYO Translate Control
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # Проверено вживую на установке в симулятор: installd отказывается
         # ставить бандл, если для com.apple.widgetkit-extension задан
         # NSExtensionPrincipalClass — этот extension point находит @main-тип
@@ -272,6 +278,8 @@ targets:
       path: LLMTranslateKit/Info.plist
       properties:
         CFBundleDisplayName: BYO Translate Kit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.kit
