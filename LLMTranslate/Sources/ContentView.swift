@@ -19,8 +19,17 @@ struct ContentView: View {
             // план проверяем App Group на оставленный хендофф, не только
             // при первом появлении вью.
             .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active {
+                switch newPhase {
+                case .active:
                     pending.consumeHandoff(appGroupSuiteName: SharedIdentifiers.appGroup)
+                case .background:
+                    // Результат показывается один раз: если приложение
+                    // свернули (в том числе свайпом, без «Готово»), при
+                    // следующем запуске с иконки должен открыться экран
+                    // настроек, а не последний переведённый скриншот.
+                    pending.discardOnBackground(appGroupSuiteName: SharedIdentifiers.appGroup)
+                default:
+                    break
                 }
             }
             .task {

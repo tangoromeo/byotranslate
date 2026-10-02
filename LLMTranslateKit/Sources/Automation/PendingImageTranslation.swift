@@ -87,29 +87,65 @@ public final class PendingImageTranslation: ObservableObject {
         try? data.write(to: url, options: .atomic)
     }
 
-    /// Вызывается приложением при выходе на передний план (раздел 10.4 ТЗ) —
-    /// читает и сразу удаляет файл(ы), если есть. Идемпотентна: если
-    /// `perform()` уже успел выполниться в этом же процессе и обновить
-    /// `imageData`/`error` напрямую, повторно ничего не переписывает.
+    /// Хендофф актуален только в момент запуска команды: холодный старт
+    /// приложения из интента укладывается в секунды. Файл старше этого —
+    /// остаток прошлого запуска, показывать его нельзя (иначе запуск с иконки
+    /// открывал бы последний переведённый скриншот).
+    nonisolated static let handoffMaxAge: TimeInterval = 30
+
+    /// Читает файл и удаляет его в любом случае. `nil`, если файла нет или он
+    /// просрочен.
+    nonisolated static func takeFreshData(
+        at url: URL,
+        maxAge: TimeInterval = handoffMaxAge,
+        now: Date = Date()
+    ) -> Data? {
+        defer { try? FileManager.default.removeItem(at: url) }
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let modified = attributes[.modificationDate] as? Date,
+              now.timeIntervalSince(modified) <= maxAge
+        else { return nil }
+        return try? Data(contentsOf: url)
+    }
+
+    /// Вызывается приложением при выходе на передний план (раздел 10.4 ТЗ).
+    /// Файлы хендоффа удаляются ВСЕГДА, даже если `perform()` уже показал
+    /// результат напрямую в этом процессе (тогда файл лишний и иначе лежал бы
+    /// до следующего запуска). Показывается только свежий хендофф и только
+    /// если в этот момент ничего не показано.
     public func consumeHandoff(appGroupSuiteName: String) {
-        if imageData == nil, error == nil,
-           let url = Self.imageHandoffURL(appGroupSuiteName: appGroupSuiteName),
-           let data = try? Data(contentsOf: url) {
-            try? FileManager.default.removeItem(at: url)
-            present(imageData: data)
-            return
-        }
-        if imageData == nil, error == nil,
-           let url = Self.errorHandoffURL(appGroupSuiteName: appGroupSuiteName),
-           let data = try? Data(contentsOf: url),
-           let payload = try? JSONSerialization.jsonObject(with: data) as? [String: String],
-           let tag = payload["tag"] {
-            try? FileManager.default.removeItem(at: url)
+        let freshImage = Self.imageHandoffURL(appGroupSuiteName: appGroupSuiteName)
+            .flatMap { Self.takeFreshData(at: $0) }
+        let freshError = Self.errorHandoffURL(appGroupSuiteName: appGroupSuiteName)
+            .flatMap { Self.takeFreshData(at: $0) }
+
+        guard imageData == nil, error == nil else { return }
+
+        if let freshImage {
+            present(imageData: freshImage)
+        } else if let freshError,
+                  let payload = try? JSONSerialization.jsonObject(with: freshError) as? [String: String],
+                  let tag = payload["tag"] {
             switch tag {
             case "noPhotoAccess": present(error: .noPhotoAccess)
             case "noScreenshotsFound": present(error: .noScreenshotsFound)
             default: present(error: .other(code: nil, message: payload["message"] ?? "неизвестная ошибка"))
             }
+        }
+    }
+
+    /// Уход в фон: показанный результат больше не нужен, а просроченные файлы
+    /// хендоффа не должны лежать на диске. Свежие не трогаем — холодный запуск
+    /// из интента может увести сцену в фон до того, как они будут прочитаны.
+    public func discardOnBackground(appGroupSuiteName: String) {
+        clear()
+        for url in [Self.imageHandoffURL(appGroupSuiteName: appGroupSuiteName),
+                    Self.errorHandoffURL(appGroupSuiteName: appGroupSuiteName)].compactMap({ $0 }) {
+            guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+                  let modified = attributes[.modificationDate] as? Date,
+                  Date().timeIntervalSince(modified) > Self.handoffMaxAge
+            else { continue }
+            try? FileManager.default.removeItem(at: url)
         }
     }
 }
