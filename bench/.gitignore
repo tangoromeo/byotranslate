@@ -1,0 +1,4 @@
+data/
+results/
+models.txt
+__pycache__/
