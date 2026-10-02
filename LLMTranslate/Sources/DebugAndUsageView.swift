@@ -90,7 +90,7 @@ struct DebugAndUsageView: View {
             }
 
             Section {
-                Button("Сохранить") { save() }
+                SaveButton { save() }
             }
         }
         .navigationTitle("Отладка и расход")

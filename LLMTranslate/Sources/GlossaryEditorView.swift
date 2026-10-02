@@ -48,7 +48,7 @@ struct GlossaryEditorView: View {
             }
 
             Section {
-                Button("Сохранить") { save() }
+                SaveButton { save() }
             }
         }
         .navigationTitle("Глоссарий")

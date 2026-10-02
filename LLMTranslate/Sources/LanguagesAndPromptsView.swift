@@ -68,7 +68,7 @@ struct LanguagesAndPromptsView: View {
             }
 
             Section {
-                Button("Сохранить") { save() }
+                SaveButton { save() }
             }
         }
         .navigationTitle("Языки и промпты")

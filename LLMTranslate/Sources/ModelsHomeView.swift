@@ -130,7 +130,7 @@ struct ProfileDetailView: View {
                 }
 
                 Section {
-                    Button("Сохранить") { save() }
+                    SaveButton { save() }
                     Button("Проверить подключение") { Task { await check() } }
                         .disabled(checkState == .running)
                 }
@@ -278,7 +278,7 @@ struct SlotSettingsView: View {
             }
 
             Section {
-                Button("Сохранить") { save() }
+                SaveButton { save() }
                 Button("Проверить") { Task { await validate() } }
                     .disabled(validationState == .running || model.isEmpty)
             }
@@ -415,5 +415,38 @@ struct ModelChoiceFields: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+/// Кнопка «Сохранить» с видимым откликом: на секунду подпись меняется на
+/// «Сохранено» с галочкой, плюс лёгкая вибрация. В строке формы обычная кнопка
+/// почти не показывает, что нажатие прошло.
+struct SaveButton: View {
+    let action: () -> Void
+
+    @State private var isConfirmed = false
+
+    var body: some View {
+        Button {
+            action()
+            withAnimation(.easeOut(duration: 0.15)) { isConfirmed = true }
+            Task {
+                try? await Task.sleep(for: .seconds(1.6))
+                withAnimation(.easeIn(duration: 0.2)) { isConfirmed = false }
+            }
+        } label: {
+            HStack {
+                Text(isConfirmed ? "Сохранено" : "Сохранить")
+                Spacer()
+                if isConfirmed {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .sensoryFeedback(.success, trigger: isConfirmed) { _, confirmed in confirmed }
+        .accessibilityValue(Text(isConfirmed ? "Сохранено" : ""))
     }
 }
