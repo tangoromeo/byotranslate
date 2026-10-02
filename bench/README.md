@@ -14,6 +14,7 @@
 - **Доверительный интервал** (bootstrap, 95%) у каждой модели и **парное
   сравнение с лидером**. Отличие внутри шума помечено `≈ лучшая (в шуме)`.
 - Задержка (медиана), число сбоев, стоимость на 1000 предложений.
+- Рейтинг «лучше» собран из этих данных: docs/RATINGS.md.
 - Не измеряет: перевод строк интерфейса, терминологию банка, стиль. Для этого
   нужны ваши собственные строки (слепое сравнение, отдельный шаг).
 - Корпуса публичные, модели могли их видеть при обучении — абсолютные числа
@@ -36,7 +37,15 @@ python3 bench.py list-models --grep gemini
 cp models.example.txt models.txt     # отредактировать
 python3 bench.py run --models models.txt --pair he-ru --corpus ntrex --n 100
 python3 bench.py report --results results/<файл>.jsonl
-python3 -m unittest -q               # тесты метрики и загрузчиков
+python3 -m unittest -q               # тесты метрики, рейтинга и загрузчиков
+```
+
+Дальше — сводка в git и рейтинг для приложения (подробно в `docs/RATINGS.md`):
+
+```bash
+python3 bench.py retry --results results/*.jsonl       # переспросить упавшие (ограничение частоты)
+python3 bench.py export-measurements --results results/<файлы> --reasoning-off <модели>
+python3 bench.py rank --swift ../LLMTranslateKit/Sources/Models/ModelRatingsData.swift
 ```
 
 Расход ≈ `n × число моделей` запросов; цена на 1000 предложений печатается в

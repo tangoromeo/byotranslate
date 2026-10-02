@@ -108,7 +108,7 @@ public final class OpenAICompatibleProvider: TranslationProvider, @unchecked Sen
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.timeoutInterval = firstByteTimeout
 
-        let body = OpenAIRequestBodyBuilder.body(for: request, model: model)
+        let body = OpenAIRequestBodyBuilder.body(for: request, model: model, baseURL: baseURL)
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
         return urlRequest
     }

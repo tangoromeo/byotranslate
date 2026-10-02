@@ -3,7 +3,7 @@ import Foundation
 /// Раздел 6.2/6.3 ТЗ: сборка тела запроса отдельно от `URLRequest`, чтобы
 /// быть тестируемой снапшотами JSON (раздел 14, п. 7 ТЗ) без реальной сети.
 public enum OpenAIRequestBodyBuilder {
-    public static func body(for request: TranslationRequest, model: String) -> [String: Any] {
+    public static func body(for request: TranslationRequest, model: String, baseURL: URL? = nil) -> [String: Any] {
         let userContent: Any
         switch request.payload {
         case let .text(text):
@@ -17,7 +17,7 @@ public enum OpenAIRequestBodyBuilder {
             ] as [Any]
         }
 
-        return [
+        var body: [String: Any] = [
             "model": model,
             "stream": true,
             "max_tokens": request.maxOutputTokens,
@@ -26,5 +26,16 @@ public enum OpenAIRequestBodyBuilder {
                 ["role": "user", "content": userContent],
             ],
         ]
+        // Только OpenRouter: у настоящего OpenAI неизвестный параметр `reasoning`
+        // вызывает ошибку запроса.
+        if request.disableReasoning, isOpenRouter(baseURL) {
+            body["reasoning"] = ["enabled": false]
+        }
+        return body
+    }
+
+    static func isOpenRouter(_ baseURL: URL?) -> Bool {
+        guard let host = baseURL?.host?.lowercased() else { return false }
+        return host == "openrouter.ai" || host.hasSuffix(".openrouter.ai")
     }
 }

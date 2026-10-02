@@ -23,6 +23,10 @@ final class WizardModel: ObservableObject {
     @Published var workingImages = false
     @Published var strongModel = ""
     @Published var strongImages = false
+    @Published var workingNoReasoning = false
+    @Published var strongNoReasoning = false
+    /// Каталог моделей, полученный при проверке ключа (для умолчаний).
+    private var catalog: [ModelDescriptor] = []
 
     init(settings: LLMTranslateSettings?) {
         self.settings = settings
@@ -59,6 +63,7 @@ final class WizardModel: ObservableObject {
         }
         guard let profile = makeProfile(for: preset) else { return false }
 
+        catalog = []
         if !skipCheck {
             isChecking = true
             defer { isChecking = false }
@@ -67,7 +72,7 @@ final class WizardModel: ObservableObject {
                 return false
             }
             do {
-                _ = try await provider.listModels()
+                catalog = try await provider.listModels()
             } catch let error as TranslationError {
                 errorMessage = error.localizedUserMessage
                 return false
@@ -92,8 +97,36 @@ final class WizardModel: ObservableObject {
         let defaultImages = preset == .anthropic || preset == .google
         workingImages = defaultImages
         strongImages = defaultImages
+        applyRatingDefaults(preset: preset)
         return true
     }
+
+    /// Умолчания для нового подключения: две лучшие по рейтингу «лучше» модели
+    /// из каталога провайдера (рабочая и сильная). Пользователь может заменить.
+    private func applyRatingDefaults(preset: ProfilePreset) {
+        workingModel = ""
+        strongModel = ""
+        workingNoReasoning = false
+        strongNoReasoning = false
+        let picks = ModelRatings.defaults(from: catalog)
+        if let working = picks.working {
+            workingModel = working.rawID
+            workingImages = defaultImages(for: working)
+            workingNoReasoning = suggestsNoReasoning(working, preset: preset)
+        }
+        if let strong = picks.strong {
+            strongModel = strong.rawID
+            strongImages = defaultImages(for: strong)
+            strongNoReasoning = suggestsNoReasoning(strong, preset: preset)
+        }
+    }
+
+    func suggestsNoReasoning(_ descriptor: ModelDescriptor, preset: ProfilePreset? = nil) -> Bool {
+        (preset ?? profile?.preset) == .openRouter
+            && ModelRatings.rating(for: descriptor.rawID)?.disableReasoningRecommended == true
+    }
+
+    var isOpenRouter: Bool { profile?.preset == .openRouter }
 
     func defaultImages(for descriptor: ModelDescriptor) -> Bool {
         descriptor.supportsImages ?? (profile?.preset == .anthropic || profile?.preset == .google)
@@ -102,7 +135,7 @@ final class WizardModel: ObservableObject {
     /// Записывает выбранные модели в слоты. Слот без выбора не трогаем.
     func finish() {
         guard let settings, let profile else { return }
-        func apply(_ slot: SlotID, model: String, images: Bool) {
+        func apply(_ slot: SlotID, model: String, images: Bool, noReasoning: Bool) {
             let model = model.trimmingCharacters(in: .whitespaces)
             guard !model.isEmpty else { return }
             let config = settings.slot(slot)
@@ -111,9 +144,10 @@ final class WizardModel: ObservableObject {
             config.baseURL = profile.baseURL
             config.model = model
             config.supportsImages = images
+            config.disableReasoning = noReasoning && profile.preset == .openRouter
         }
-        apply(.working, model: workingModel, images: workingImages)
-        apply(.strong, model: strongModel, images: strongImages)
+        apply(.working, model: workingModel, images: workingImages, noReasoning: workingNoReasoning)
+        apply(.strong, model: strongModel, images: strongImages, noReasoning: strongNoReasoning)
         TranslationCache(appGroupSuiteName: SharedIdentifiers.appGroup).clear()
     }
 }
@@ -279,17 +313,25 @@ private struct ModelsStep: View {
     var body: some View {
         Form {
             Section {
-                ModelChoiceFields(model: $wizard.workingModel, supportsImages: $wizard.workingImages) {
+                ModelChoiceFields(
+                    model: $wizard.workingModel,
+                    supportsImages: $wizard.workingImages,
+                    disableReasoning: wizard.isOpenRouter ? $wizard.workingNoReasoning : nil
+                ) {
                     pickTarget = .working
                 }
             } header: {
                 Text("Рабочая модель")
             } footer: {
-                Text("Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения.")
+                Text("Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения. Заполнено по рейтингу «лучше»: можно заменить.")
             }
 
             Section {
-                ModelChoiceFields(model: $wizard.strongModel, supportsImages: $wizard.strongImages) {
+                ModelChoiceFields(
+                    model: $wizard.strongModel,
+                    supportsImages: $wizard.strongImages,
+                    disableReasoning: wizard.isOpenRouter ? $wizard.strongNoReasoning : nil
+                ) {
                     pickTarget = .strong
                 }
             } header: {
@@ -317,9 +359,11 @@ private struct ModelsStep: View {
                     case .working:
                         wizard.workingModel = descriptor.rawID
                         wizard.workingImages = images
+                        wizard.workingNoReasoning = wizard.suggestsNoReasoning(descriptor)
                     case .strong:
                         wizard.strongModel = descriptor.rawID
                         wizard.strongImages = images
+                        wizard.strongNoReasoning = wizard.suggestsNoReasoning(descriptor)
                     }
                     pickTarget = nil
                 }

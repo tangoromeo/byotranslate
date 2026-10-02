@@ -245,7 +245,8 @@ public final class TranslationSession: ObservableObject {
             targetLanguage: context.targetLanguage,
             mode: mode,
             systemPrompt: systemPrompt,
-            maxOutputTokens: context.isImage ? settings.imageMaxOutputTokens : settings.textMaxOutputTokens
+            maxOutputTokens: context.isImage ? settings.imageMaxOutputTokens : settings.textMaxOutputTokens,
+            disableReasoning: slot.disableReasoning
         )
 
         // Раздел 11.4 ТЗ v1.2: кэш только для текста, никогда для изображений.

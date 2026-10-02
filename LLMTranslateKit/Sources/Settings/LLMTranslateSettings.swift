@@ -253,6 +253,15 @@ public struct ModelSlotConfig: @unchecked Sendable {
         static let model = "model"
         static let supportsImages = "supportsImages"
         static let profileID = "profileID"
+        static let disableReasoning = "disableReasoning"
+    }
+
+    /// Отключить «размышление» модели (только OpenRouter). По умолчанию
+    /// выключено: не у всех моделей размышление можно отключить, поэтому
+    /// включает его либо пользователь, либо мастер по данным рейтинга.
+    public var disableReasoning: Bool {
+        get { defaults.bool(forKey: key(Key.disableReasoning)) }
+        nonmutating set { defaults.set(newValue, forKey: key(Key.disableReasoning)) }
     }
 
     /// Раздел B5: профиль, через который слот ходит в сеть. `nil` — слот

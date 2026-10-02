@@ -1,0 +1,261 @@
+{
+  "corpus": "ntrex",
+  "measuredAt": "2026-10-02",
+  "models": {
+    "anthropic/claude-haiku-4.5": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 45.9642,
+          "ci_high": 49.5182,
+          "ci_low": 42.1274,
+          "cost_per_1000": 0.501,
+          "diff": 2.9188,
+          "latency": 2.2495,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "worse"
+        },
+        "he-ru": {
+          "chrf": 44.2123,
+          "ci_high": 47.1002,
+          "ci_low": 41.3523,
+          "cost_per_1000": 0.5419,
+          "diff": 1.9017,
+          "latency": 2.3685,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "worse"
+        }
+      }
+    },
+    "anthropic/claude-sonnet-5.5": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 47.6573,
+          "ci_high": 51.1665,
+          "ci_low": 43.9321,
+          "cost_per_1000": 1.2164,
+          "diff": 1.2257,
+          "latency": 2.5025,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        },
+        "he-ru": {
+          "chrf": 45.8814,
+          "ci_high": 48.7395,
+          "ci_low": 43.0914,
+          "cost_per_1000": 1.9874,
+          "diff": 0.2326,
+          "latency": 3.0895,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        }
+      }
+    },
+    "deepseek/deepseek-v3.2": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 47.9264,
+          "ci_high": 51.5478,
+          "ci_low": 44.0858,
+          "cost_per_1000": 0.0661,
+          "diff": 0.9566,
+          "latency": 2.3145,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        },
+        "he-ru": {
+          "chrf": 44.6536,
+          "ci_high": 47.8974,
+          "ci_low": 41.4215,
+          "cost_per_1000": 0.071,
+          "diff": 1.4604,
+          "latency": 2.3045,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        }
+      }
+    },
+    "google/gemini-2.5-flash-lite": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 48.8829,
+          "ci_high": 52.6443,
+          "ci_low": 45.081,
+          "cost_per_1000": 0.0298,
+          "diff": 0.0,
+          "latency": 0.536,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "leader"
+        },
+        "he-ru": {
+          "chrf": 46.114,
+          "ci_high": 49.2673,
+          "ci_low": 42.7758,
+          "cost_per_1000": 0.0312,
+          "diff": 0.0,
+          "latency": 0.56,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "leader"
+        }
+      }
+    },
+    "google/gemini-3.1-pro-preview": {
+      "pairs": {
+        "he-ru": {
+          "chrf": 43.211,
+          "ci_high": 50.6899,
+          "ci_low": 35.9325,
+          "cost_per_1000": 19.9388,
+          "diff": 0.4611,
+          "latency": 16.7865,
+          "ok": 20,
+          "rows": 20,
+          "verdict": "noise"
+        }
+      }
+    },
+    "google/gemini-3.8-flash": {
+      "pairs": {
+        "he-ru": {
+          "chrf": 46.0832,
+          "ci_high": 52.6373,
+          "ci_low": 39.8818,
+          "cost_per_1000": 3.5688,
+          "diff": -2.4111,
+          "latency": 7.7395,
+          "ok": 20,
+          "rows": 20,
+          "verdict": "noise"
+        }
+      }
+    },
+    "mistralai/mistral-large-2512": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 47.4841,
+          "ci_high": 51.7199,
+          "ci_low": 43.4947,
+          "cost_per_1000": 0.1366,
+          "diff": 1.6337,
+          "latency": 1.676,
+          "ok": 91,
+          "rows": 100,
+          "verdict": "noise"
+        },
+        "he-ru": {
+          "chrf": 43.4954,
+          "ci_high": 46.3415,
+          "ci_low": 40.6681,
+          "cost_per_1000": 0.1502,
+          "diff": 2.6678,
+          "latency": 1.577,
+          "ok": 96,
+          "rows": 100,
+          "verdict": "worse"
+        }
+      }
+    },
+    "openai/gpt-4.1-mini": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 46.6977,
+          "ci_high": 50.2468,
+          "ci_low": 42.8649,
+          "cost_per_1000": 0.126,
+          "diff": 2.1852,
+          "latency": 1.2115,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "worse"
+        },
+        "he-ru": {
+          "chrf": 44.8201,
+          "ci_high": 47.7164,
+          "ci_low": 41.8563,
+          "cost_per_1000": 0.1299,
+          "diff": 1.2939,
+          "latency": 1.22,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        }
+      }
+    },
+    "openai/gpt-5.4": {
+      "pairs": {
+        "he-ru": {
+          "chrf": 43.6428,
+          "ci_high": 50.7319,
+          "ci_low": 37.2025,
+          "cost_per_1000": 0.9533,
+          "diff": 0.0293,
+          "latency": 1.445,
+          "ok": 20,
+          "rows": 20,
+          "verdict": "noise"
+        }
+      }
+    },
+    "openai/gpt-5.4-mini": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 46.5353,
+          "ci_high": 50.1013,
+          "ci_low": 42.8382,
+          "cost_per_1000": 0.3055,
+          "diff": 2.3477,
+          "latency": 1.4705,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "worse"
+        },
+        "he-ru": {
+          "chrf": 44.3696,
+          "ci_high": 47.274,
+          "ci_low": 41.4772,
+          "cost_per_1000": 0.3153,
+          "diff": 1.7444,
+          "latency": 1.38,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "worse"
+        }
+      }
+    },
+    "qwen/qwen3.5-plus-20260420": {
+      "pairs": {
+        "en-ru": {
+          "chrf": 47.4836,
+          "ci_high": 51.0417,
+          "ci_low": 44.0008,
+          "cost_per_1000": 0.12,
+          "diff": 1.3993,
+          "latency": 1.9755,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        },
+        "he-ru": {
+          "chrf": 45.4618,
+          "ci_high": 48.3647,
+          "ci_low": 42.4571,
+          "cost_per_1000": 0.124,
+          "diff": 0.6523,
+          "latency": 1.4515,
+          "ok": 100,
+          "rows": 100,
+          "verdict": "noise"
+        }
+      },
+      "reasoningOffRecommended": true
+    }
+  },
+  "seed": 1
+}

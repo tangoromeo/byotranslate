@@ -136,6 +136,14 @@
 "Сохранить без проверки" = "Save without checking";
 "Проверить и продолжить" = "Check and continue";
 "Введите адрес сервера, например https://example.com/v1" = "Enter the server address, e.g. https://example.com/v1";
-"Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения." = "Translates selected text and screenshots, so a fast, inexpensive model fits. For screenshots the model must understand images.";
 "Сильная модель (необязательно)" = "Strong model (optional)";
 "Включается кнопкой «Точнее», когда нужен более аккуратный перевод." = "Used by the “More precise” button when you need a more careful translation.";
+
+/* Рейтинг моделей, отключение размышления */
+"Рейтинг устарел (замер %@): обновится с новой версией приложения. Сначала модели с рейтингом." = "Rating is out of date (measured %@): it updates with a new app version. Rated models come first.";
+"Сначала лучшие по рейтингу «лучше» (замер %@). Модели без оценки — внизу по алфавиту." = "Best by the “better” rating first (measured %@). Unrated models are listed below, alphabetically.";
+"Рейтинг %lld из 100" = "Rating %lld out of 100";
+"Рейтинг «лучше»: %lld из 100" = "“Better” rating: %lld out of 100";
+"Отключить размышление" = "Disable reasoning";
+"Для моделей, которые «размышляют» перед ответом (например, Qwen): без этого весь лимит ответа может уйти на рассуждения, и перевод придёт пустым. Работает только через OpenRouter." = "For models that “think” before answering (e.g. Qwen): without this the whole output limit may go to reasoning and the translation comes back empty. Works only through OpenRouter.";
+"Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения. Заполнено по рейтингу «лучше»: можно заменить." = "Translates selected text and screenshots, so a fast, inexpensive model fits. For screenshots the model must understand images. Pre-filled from the “better” rating; you can change it.";

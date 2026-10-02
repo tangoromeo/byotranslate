@@ -228,6 +228,7 @@ struct SlotSettingsView: View {
     @State private var profileID: UUID?
     @State private var model = ""
     @State private var supportsImages = false
+    @State private var disableReasoning = false
     @State private var isLegacy = false
     @State private var validationState: ValidationState = .idle
     @State private var isShowingModelPicker = false
@@ -267,7 +268,11 @@ struct SlotSettingsView: View {
             }
 
             Section("Модель") {
-                ModelChoiceFields(model: $model, supportsImages: $supportsImages) {
+                ModelChoiceFields(
+                    model: $model,
+                    supportsImages: $supportsImages,
+                    disableReasoning: isOpenRouterSelected ? $disableReasoning : nil
+                ) {
                     isShowingModelPicker = true
                 }
             }
@@ -296,9 +301,17 @@ struct SlotSettingsView: View {
             ModelPickerView(providerID: connection.providerID, currentAPIKey: connection.apiKey, baseURL: connection.baseURL) { descriptor in
                 model = descriptor.rawID
                 supportsImages = descriptor.supportsImages ?? supportsImages
+                // Рейтинг знает, каким моделям размышление мешает с нашим лимитом ответа.
+                disableReasoning = isOpenRouterSelected
+                    && ModelRatings.rating(for: descriptor.rawID)?.disableReasoningRecommended == true
                 isShowingModelPicker = false
             }
         }
+    }
+
+    private var isOpenRouterSelected: Bool {
+        guard let profileID else { return false }
+        return settings?.profile(id: profileID)?.preset == .openRouter
     }
 
     /// Подключение по текущему выбору в форме (ещё не сохранённому).
@@ -322,6 +335,7 @@ struct SlotSettingsView: View {
         profileID = config.profileID.flatMap { settings.profile(id: $0)?.id }
         model = config.model
         supportsImages = config.supportsImages
+        disableReasoning = config.disableReasoning
         isLegacy = config.isConfigured && config.profileID == nil
     }
 
@@ -338,6 +352,7 @@ struct SlotSettingsView: View {
         }
         config.model = model
         config.supportsImages = supportsImages
+        config.disableReasoning = disableReasoning && isOpenRouterSelected
         TranslationCache(appGroupSuiteName: SharedIdentifiers.appGroup).clear()
     }
 
@@ -371,6 +386,8 @@ struct SlotSettingsView: View {
 struct ModelChoiceFields: View {
     @Binding var model: String
     @Binding var supportsImages: Bool
+    /// `nil` — переключатель не показывается (он нужен только для OpenRouter).
+    var disableReasoning: Binding<Bool>?
     let onPickFromList: () -> Void
 
     var body: some View {
@@ -381,6 +398,17 @@ struct ModelChoiceFields: View {
             Button("Список", action: onPickFromList)
                 .buttonStyle(.borderless)
         }
+        if let rating = ModelRatings.rating(for: model) {
+            Text("Рейтинг «лучше»: \(rating.score) из 100")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
         Toggle("Модель понимает изображения", isOn: $supportsImages)
+        if let disableReasoning {
+            Toggle("Отключить размышление", isOn: disableReasoning)
+            Text("Для моделей, которые «размышляют» перед ответом (например, Qwen): без этого весь лимит ответа может уйти на рассуждения, и перевод придёт пустым. Работает только через OpenRouter.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }

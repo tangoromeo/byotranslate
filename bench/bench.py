@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import re
@@ -239,63 +240,92 @@ def is_ok(row: dict) -> bool:
     return bool(row["output"]) and not row["error"]
 
 
-def summarize(rows: list[dict], models_info: dict[str, dict] | None = None) -> str:
-    """Таблица по (пара, модель). Качество считается только по удавшимся
-    ответам (сбой — это недоступность, а не плохой перевод); сравнение с
-    лидером — на предложениях, удавшихся у обеих моделей. Модель, у которой
-    удалось меньше 80% запросов, не оценивается."""
-    out: list[str] = []
+def load_rows(paths: list[str]) -> list[dict]:
+    """Строки результатов из нескольких файлов. Одна и та же тройка
+    (пара, модель, предложение) в нескольких файлах — побеждает более
+    поздний файл в списке (так дозапрос упавших и перепрогон заменяют старое)."""
+    merged: dict[tuple, dict] = {}
+    for path in paths:
+        for line in Path(path).read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                merged[(row["pair"], row["model"], row["index"])] = row
+    return list(merged.values())
+
+
+def analyze(rows: list[dict], models_info: dict[str, dict] | None = None) -> dict:
+    """Статистика по (пара, модель). Качество считается только по удавшимся
+    ответам (сбой — недоступность, а не плохой перевод); сравнение с лидером —
+    на предложениях, удавшихся у обеих моделей. Модель, у которой удалось
+    меньше 80% запросов, не оценивается (`excluded`)."""
+    result: dict[str, dict] = {}
     for pair in sorted({r["pair"] for r in rows}):
         by_model: dict[str, list[dict]] = {}
         for r in rows:
             if r["pair"] == pair:
                 by_model.setdefault(r["model"], []).append(r)
-        total = max(len(rs) for rs in by_model.values())
         ok_scores = {m: {r["index"]: r["chrf"] for r in rs if is_ok(r)} for m, rs in by_model.items()}
         rate = {m: len(ok_scores[m]) / max(len(by_model[m]), 1) for m in by_model}
         evaluable = [m for m in by_model if rate[m] >= MIN_SUCCESS_RATE]
-        ranked = sorted(evaluable, key=lambda m: -statistics.fmean(ok_scores[m].values())) + \
-            sorted((m for m in by_model if m not in evaluable), key=lambda m: -rate[m])
-        best = ranked[0] if evaluable else None
-        out.append(f"\n### {pair}  (предложений: {total})\n")
+        leader = max(evaluable, key=lambda m: statistics.fmean(ok_scores[m].values())) if evaluable else None
+        models: dict[str, dict] = {}
+        for m, rs in by_model.items():
+            entry: dict = {"rows": len(rs), "ok": len(ok_scores[m]), "verdict": "excluded", "chrf": None,
+                           "ci_low": None, "ci_high": None, "diff": 0.0}
+            latency_values = [r["latency"] for r in rs if is_ok(r)] or [r["latency"] for r in rs]
+            entry["latency"] = statistics.median(latency_values)
+            entry["cost_per_1000"] = cost_per_1000_value(rs, (models_info or {}).get(m))
+            if m in evaluable:
+                values = list(ok_scores[m].values())
+                entry["chrf"] = statistics.fmean(values)
+                entry["ci_low"], entry["ci_high"] = bootstrap_ci(values)
+                if m == leader:
+                    entry["verdict"] = "leader"
+                else:
+                    common = sorted(set(ok_scores[leader]) & set(ok_scores[m]))
+                    diff, low_diff, _ = paired_diff_ci([ok_scores[leader][i] for i in common], [ok_scores[m][i] for i in common])
+                    entry["diff"] = diff
+                    # значимо хуже, только если весь интервал разницы выше нуля
+                    entry["verdict"] = "worse" if low_diff > 0 else "noise"
+            models[m] = entry
+        result[pair] = {"total": max(len(rs) for rs in by_model.values()), "leader": leader, "models": models}
+    return result
+
+
+def render(analysis: dict) -> str:
+    out: list[str] = []
+    verdict_text = {"leader": "лидер", "noise": "≈ лучшая (в шуме)", "excluded": "не оценивается (сбои)"}
+    for pair, data in analysis.items():
+        out.append(f"\n### {pair}  (предложений: {data['total']})\n")
         out.append("| Модель | chrF++ | 95% ДИ | vs лидер | удачных | задержка, с | $/1000 предл. |")
         out.append("|---|---|---|---|---|---|---|")
-        for m in ranked:
-            rs = by_model[m]
-            ok_count = len(ok_scores[m])
-            if m not in evaluable:
-                mean_text, ci_text, verdict = "—", "—", "не оценивается (сбои)"
-            else:
-                values = list(ok_scores[m].values())
-                mean_text = f"{statistics.fmean(values):.1f}"
-                low, high = bootstrap_ci(values)
-                ci_text = f"{low:.1f}–{high:.1f}"
-                if m == best:
-                    verdict = "лидер"
-                else:
-                    common = sorted(set(ok_scores[best]) & set(ok_scores[m]))
-                    diff, low_diff, _ = paired_diff_ci([ok_scores[best][i] for i in common], [ok_scores[m][i] for i in common])
-                    # значимо, только если весь интервал разницы выше нуля
-                    verdict = f"хуже на {diff:.1f}" if low_diff > 0 else "≈ лучшая (в шуме)"
-            latency_values = [r["latency"] for r in rs if is_ok(r)] or [r["latency"] for r in rs]
-            cost = cost_per_1000(rs, (models_info or {}).get(m))
-            out.append(
-                f"| `{m}` | {mean_text} | {ci_text} | {verdict} | {ok_count}/{len(rs)} | "
-                f"{statistics.median(latency_values):.1f} | {cost} |"
-            )
+        order = sorted(
+            data["models"].items(),
+            key=lambda kv: (kv[1]["chrf"] is None, -(kv[1]["chrf"] or 0), -kv[1]["ok"]),
+        )
+        for m, e in order:
+            verdict = f"хуже на {e['diff']:.1f}" if e["verdict"] == "worse" else verdict_text[e["verdict"]]
+            mean_text = "—" if e["chrf"] is None else f"{e['chrf']:.1f}"
+            ci_text = "—" if e["chrf"] is None else f"{e['ci_low']:.1f}–{e['ci_high']:.1f}"
+            cost = "—" if e["cost_per_1000"] is None else f"{e['cost_per_1000']:.3f}"
+            out.append(f"| `{m}` | {mean_text} | {ci_text} | {verdict} | {e['ok']}/{e['rows']} | {e['latency']:.1f} | {cost} |")
     return "\n".join(out)
 
 
-def cost_per_1000(rows: list[dict], info: dict | None) -> str:
+def summarize(rows: list[dict], models_info: dict[str, dict] | None = None) -> str:
+    return render(analyze(rows, models_info))
+
+
+def cost_per_1000_value(rows: list[dict], info: dict | None) -> float | None:
     if not info:
-        return "—"
+        return None
     pricing = info.get("pricing") or {}
     try:
         price_in, price_out = float(pricing["prompt"]), float(pricing["completion"])
     except (KeyError, TypeError, ValueError):
-        return "—"
+        return None
     spent = sum((r["prompt_tokens"] or 0) * price_in + (r["completion_tokens"] or 0) * price_out for r in rows)
-    return f"{spent / max(len(rows), 1) * 1000:.3f}"
+    return spent / max(len(rows), 1) * 1000
 
 
 # ----------------------------------------------------------------------------
@@ -390,12 +420,129 @@ def cmd_retry(args: argparse.Namespace) -> None:
         print(f"  после повтора упавших: {still}", file=sys.stderr)
 
 
-def cmd_report(args: argparse.Namespace) -> None:
-    rows = [
-        json.loads(l)
-        for path in args.results
-        for l in Path(path).read_text(encoding="utf-8").splitlines() if l.strip()
+# ----------------------------------------------------------------------------
+# Рейтинг «лучше»: интегральный критерий (качество, цена, скорость)
+# ----------------------------------------------------------------------------
+WEIGHTS = {"quality": 0.5, "cost": 0.3, "speed": 0.2}
+COST_BEST, COST_WORST = 0.03, 3.0      # $ за 1000 предложений: ≤ лучшего → 1.0, ≥ худшего → 0.0 (логарифм)
+LATENCY_BEST, LATENCY_WORST = 0.5, 10.0  # секунд на ответ
+QUALITY_SCALE = 10.0                    # отставание в chrF-пунктах, при котором оценка качества падает до 0
+METHOD_VERSION = 1
+
+
+def _log_scale(value: float, best: float, worst: float) -> float:
+    if value <= best:
+        return 1.0
+    if value >= worst:
+        return 0.0
+    return 1.0 - math.log10(value / best) / math.log10(worst / best)
+
+
+def score_model(pairs: dict[str, dict]) -> dict | None:
+    """Оценка 0–100 по замерам модели в разных парах. `None`, если нигде не оценена."""
+    usable = [p for p in pairs.values() if p["verdict"] != "excluded" and p["chrf"] is not None]
+    if not usable:
+        return None
+    quality = statistics.fmean(
+        1.0 if p["verdict"] in ("leader", "noise") else max(0.0, 1.0 - p["diff"] / QUALITY_SCALE) for p in usable
+    )
+    costs = [p["cost_per_1000"] for p in usable if p["cost_per_1000"] is not None]
+    cost = statistics.fmean(costs) if costs else COST_WORST
+    latency = statistics.fmean(p["latency"] for p in usable)
+    cost_score = _log_scale(cost, COST_BEST, COST_WORST)
+    speed_score = _log_scale(latency, LATENCY_BEST, LATENCY_WORST)
+    total = WEIGHTS["quality"] * quality + WEIGHTS["cost"] * cost_score + WEIGHTS["speed"] * speed_score
+    return {
+        "score": round(100 * total),
+        "quality": round(quality, 3), "cost_score": round(cost_score, 3), "speed_score": round(speed_score, 3),
+        "cost_per_1000": round(cost, 4), "latency": round(latency, 2),
+        "sentences": min(p["ok"] for p in usable),
+    }
+
+
+def model_key(raw_id: str) -> str:
+    """Тот же ключ, что `ModelRatings.key(for:)` в Swift (есть тест на совпадение)."""
+    model = raw_id.lower()
+    if ":" in model and model.rsplit(":", 1)[1] in {"free", "batch", "nitro", "floor", "extended", "online"}:
+        model = model.rsplit(":", 1)[0]
+    model = model.rsplit("/", 1)[-1]
+    model = model.replace(".", "-")
+    for pattern in (r"-20\d{6}$", r"-20\d{2}-\d{2}-\d{2}$"):
+        model = re.sub(pattern, "", model)
+    return model
+
+
+def build_ratings(measurements: dict) -> list[dict]:
+    rated = []
+    for model, info in measurements["models"].items():
+        scored = score_model(info["pairs"])
+        if scored:
+            rated.append({"name": model, "key": model_key(model), **scored,
+                          "disable_reasoning": bool(info.get("reasoningOffRecommended"))})
+    rated.sort(key=lambda r: (-r["score"], r["name"]))
+    return rated
+
+
+def swift_source(measurements: dict, ratings: list[dict]) -> str:
+    lines = [
+        "// СГЕНЕРИРОВАНО: python3 bench/bench.py rank — не править вручную.",
+        f"// Замер: {measurements['measuredAt']}, корпус {measurements['corpus']}, seed {measurements['seed']}; метод v{METHOD_VERSION}.",
+        f"// Критерий «лучше» = {WEIGHTS['quality']}·качество + {WEIGHTS['cost']}·цена + {WEIGHTS['speed']}·скорость;",
+        f"// цена {COST_BEST}→1 … {COST_WORST}→0 $/1000 предл. (лог.), задержка {LATENCY_BEST}→1 … {LATENCY_WORST}→0 с (лог.),",
+        f"// качество: 1 если не значимо хуже лидера, иначе 1 − отставание/{QUALITY_SCALE:g} chrF.",
+        "// Пересмотр: docs/RATINGS.md.",
+        "",
+        "extension ModelRatings {",
+        f'    public static let measuredAt = "{measurements["measuredAt"]}"',
+        f"    public static let methodVersion = {METHOD_VERSION}",
+        "    public static let entries: [ModelRating] = [",
     ]
+    for r in ratings:
+        reasoning = ", disableReasoningRecommended: true" if r["disable_reasoning"] else ""
+        lines.append(
+            f'        ModelRating(key: "{r["key"]}", name: "{r["name"]}", score: {r["score"]}, sentences: {r["sentences"]}{reasoning}),'
+        )
+    lines += ["    ]", "}", ""]
+    return "\n".join(lines)
+
+
+def cmd_export_measurements(args: argparse.Namespace) -> None:
+    """Сводка замеров в файл, который лежит в git: по нему рейтинг пересобирается
+    без сырых ответов и без самих корпусов (лицензия)."""
+    rows = load_rows(args.results)
+    for r in rows:
+        r["chrf"] = chrf(r["output"], r["reference"]) if r["output"] else 0.0
+    catalog = fetch_models()
+    analysis = analyze(rows, catalog)
+    models: dict[str, dict] = {}
+    for pair, data in analysis.items():
+        for model, e in data["models"].items():
+            entry = models.setdefault(model, {"pairs": {}})
+            entry["pairs"][pair] = {k: (round(v, 4) if isinstance(v, float) else v) for k, v in e.items()}
+            if model in (args.reasoning_off or []):
+                entry["reasoningOffRecommended"] = True
+    measured = max(Path(p).stat().st_mtime for p in args.results)
+    out = {
+        "measuredAt": time.strftime("%Y-%m-%d", time.localtime(measured)),
+        "corpus": rows[0]["corpus"], "seed": args.seed, "models": models,
+    }
+    Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"записано: {args.out} ({len(models)} моделей)", file=sys.stderr)
+
+
+def cmd_rank(args: argparse.Namespace) -> None:
+    measurements = json.loads(Path(args.measurements).read_text(encoding="utf-8"))
+    ratings = build_ratings(measurements)
+    for i, r in enumerate(ratings, 1):
+        print(f"{i:2}. {r['score']:3}  {r['name']:42} качество {r['quality']:.2f}  цена {r['cost_score']:.2f} "
+              f"(${r['cost_per_1000']}/1000)  скорость {r['speed_score']:.2f} ({r['latency']}с)  n={r['sentences']}")
+    if args.swift:
+        Path(args.swift).write_text(swift_source(measurements, ratings), encoding="utf-8")
+        print(f"записано: {args.swift}", file=sys.stderr)
+
+
+def cmd_report(args: argparse.Namespace) -> None:
+    rows = load_rows(args.results)
     for r in rows:  # пересчёт: метрику можно улучшить, не гоняя модели заново
         r["chrf"] = chrf(r["output"], r["reference"]) if r["output"] else 0.0
     try:
@@ -435,6 +582,18 @@ def main() -> None:
     p.add_argument("--max-tokens", type=int, default=2048)
     p.add_argument("--no-reasoning", action="store_true")
     p.set_defaults(func=cmd_retry)
+
+    p = sub.add_parser("export-measurements", help="сводка замеров в measurements.json (для git)")
+    p.add_argument("--results", required=True, nargs="+", help="порядок важен: более поздний файл заменяет ранний")
+    p.add_argument("--out", default=str(ROOT / "measurements.json"))
+    p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--reasoning-off", nargs="*", default=[], help="модели, замеренные с отключённым размышлением")
+    p.set_defaults(func=cmd_export_measurements)
+
+    p = sub.add_parser("rank", help="рейтинг «лучше» из measurements.json; --swift пишет данные для приложения")
+    p.add_argument("--measurements", default=str(ROOT / "measurements.json"))
+    p.add_argument("--swift")
+    p.set_defaults(func=cmd_rank)
 
     p = sub.add_parser("report")
     p.add_argument("--results", required=True, nargs="+", help="один или несколько jsonl (объединяются)")

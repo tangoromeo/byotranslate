@@ -51,7 +51,12 @@ struct ModelPickerView: View {
                 // видно текущее состояние переключателя, не только клик.
                 if !isLoading, errorMessage == nil {
                     Toggle("Только с поддержкой изображений", isOn: $imagesOnly)
-                        .padding()
+                        .padding([.horizontal, .top])
+                    ratingCaption
+                        .font(.caption)
+                        .foregroundStyle(ModelRatings.isStale() ? Color.orange : Color.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding([.horizontal, .bottom])
                     Divider()
                 }
 
@@ -81,6 +86,7 @@ struct ModelPickerView: View {
                                         }
                                     }
                                     Spacer()
+                                    ratingBadge(for: descriptor.rawID)
                                     modalityBadge(for: descriptor.supportsImages)
                                 }
                             }
@@ -97,6 +103,28 @@ struct ModelPickerView: View {
                 }
             }
             .task { await loadModels() }
+        }
+    }
+
+    /// Список отсортирован по рейтингу «лучше» (docs/RATINGS.md); дата замера
+    /// видна, а устаревший рейтинг подсвечен.
+    private var ratingCaption: Text {
+        let date = ModelRatings.measuredDate?.formatted(date: .numeric, time: .omitted) ?? "—"
+        if ModelRatings.isStale() {
+            return Text("Рейтинг устарел (замер \(date)): обновится с новой версией приложения. Сначала модели с рейтингом.")
+        }
+        return Text("Сначала лучшие по рейтингу «лучше» (замер \(date)). Модели без оценки — внизу по алфавиту.")
+    }
+
+    @ViewBuilder
+    private func ratingBadge(for rawID: String) -> some View {
+        if let rating = ModelRatings.rating(for: rawID) {
+            Text("\(rating.score)")
+                .font(.caption.monospacedDigit().weight(.semibold))
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2)
+                .background(Capsule().fill(Color.green.opacity(0.18)))
+                .accessibilityLabel(Text("Рейтинг \(rating.score) из 100"))
         }
     }
 
@@ -124,7 +152,7 @@ struct ModelPickerView: View {
             return
         }
         do {
-            models = try await provider.listModels()
+            models = ModelRatings.sorted(try await provider.listModels())
         } catch let error as TranslationError {
             errorMessage = error.localizedUserMessage
         } catch {

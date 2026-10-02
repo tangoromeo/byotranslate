@@ -18,6 +18,11 @@ public struct TranslationRequest: Sendable {
     /// Термин → перевод. Может быть пустым.
     public let glossary: [String: String]
     public let maxOutputTokens: Int
+    /// Просить провайдера не «размышлять» перед ответом. Сейчас поддержано
+    /// только для OpenRouter (единый параметр `reasoning.enabled`); остальные
+    /// провайдеры флаг игнорируют. Размышляющие модели с лимитом ответа
+    /// приложения могут отдать пустой ответ: всё уходит на рассуждения.
+    public let disableReasoning: Bool
 
     public init(
         payload: Payload,
@@ -26,7 +31,8 @@ public struct TranslationRequest: Sendable {
         mode: TranslationMode = .plain,
         systemPrompt: String,
         glossary: [String: String] = [:],
-        maxOutputTokens: Int = 2048
+        maxOutputTokens: Int = 2048,
+        disableReasoning: Bool = false
     ) {
         self.payload = payload
         self.detectedSourceLanguage = detectedSourceLanguage
@@ -35,5 +41,6 @@ public struct TranslationRequest: Sendable {
         self.systemPrompt = systemPrompt
         self.glossary = glossary
         self.maxOutputTokens = maxOutputTokens
+        self.disableReasoning = disableReasoning
     }
 }
