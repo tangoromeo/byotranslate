@@ -104,3 +104,38 @@
 /* Intents/TranslateShortcuts (shortTitle) */
 "Перевести скриншот" = "Translate Screenshot";
 "Перевести изображение" = "Translate Image";
+
+/* B5: подключения (профили), мастер, слоты */
+"Подключения" = "Connections";
+"Добавить подключение" = "Add connection";
+"Не настроена" = "Not set up";
+"Сервер" = "Server";
+"Тип API" = "API type";
+"Новый ключ" = "New key";
+"Проверить подключение" = "Check connection";
+"Удалить подключение" = "Delete connection";
+"Удалить подключение?" = "Delete connection?";
+"Удалить" = "Delete";
+"Слоты моделей, которые используют это подключение, станут не настроенными." = "Model slots that use this connection will become unconfigured.";
+"Подключение работает. Моделей в списке: %lld" = "Connection works. Models in the list: %lld";
+"Подключение" = "Connection";
+"Не выбрано" = "Not selected";
+"Сначала добавьте подключение к провайдеру." = "Add a provider connection first.";
+"Слот настроен вручную до появления подключений. Выберите подключение, чтобы перейти на него." = "This slot was set up manually before connections existed. Pick a connection to switch to it.";
+"Новое подключение" = "New connection";
+"Все подключения уже добавлены." = "All connections are already added.";
+"Выберите, откуда брать модели" = "Choose where models come from";
+"Один ключ — модели разных компаний. Проще всего начать" = "One key, models from many companies. The easiest way to start";
+"Модели GPT напрямую у OpenAI" = "GPT models directly from OpenAI";
+"Модели Claude напрямую у Anthropic" = "Claude models directly from Anthropic";
+"Модели Gemini напрямую у Google" = "Gemini models directly from Google";
+"Свой сервер: Ollama, LM Studio, прокси — любой совместимый API" = "Your own server: Ollama, LM Studio, a proxy — any compatible API";
+"Ключ для %@" = "Key for %@";
+"Ключ хранится в Keychain на этом устройстве. Для локальных серверов без ключа подойдёт любое значение." = "The key is stored in the Keychain on this device. For local servers without a key, any value will do.";
+"Ключ хранится в Keychain на этом устройстве и отправляется только этому провайдеру." = "The key is stored in the Keychain on this device and sent only to this provider.";
+"Сохранить без проверки" = "Save without checking";
+"Проверить и продолжить" = "Check and continue";
+"Введите адрес сервера, например https://example.com/v1" = "Enter the server address, e.g. https://example.com/v1";
+"Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения." = "Translates selected text and screenshots, so a fast, inexpensive model fits. For screenshots the model must understand images.";
+"Сильная модель (необязательно)" = "Strong model (optional)";
+"Включается кнопкой «Точнее», когда нужен более аккуратный перевод." = "Used by the “More precise” button when you need a more careful translation.";

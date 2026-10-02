@@ -201,7 +201,10 @@ public final class TranslationSession: ObservableObject {
             fail(.modelDoesNotSupportImages)
             return
         }
-        guard let apiKey = (try? keychain.apiKey(slot: slotID)) ?? nil, !apiKey.isEmpty else {
+        // Раздел B5: подключение слота — через профиль, а для слотов,
+        // настроенных до профилей, через прежние поля и ключ слота.
+        let connection = settings.connection(for: slotID, keychain: keychain)
+        guard let apiKey = connection.apiKey, !apiKey.isEmpty else {
             fail(.missingAPIKey)
             return
         }
@@ -210,6 +213,7 @@ public final class TranslationSession: ObservableObject {
         let totalTimeout: TimeInterval = context.isImage ? settings.imageTotalTimeout : settings.textTotalTimeout
         guard let provider = Self.makeProvider(
             slot: slot,
+            connection: connection,
             apiKey: apiKey,
             firstByteTimeout: firstByteTimeout,
             totalTimeout: totalTimeout
@@ -269,7 +273,7 @@ public final class TranslationSession: ObservableObject {
             return
         }
 
-        log.notice("translate start: slot=\(slotID.rawValue, privacy: .public) provider=\(slot.providerID.rawValue, privacy: .public) model=\(slot.model, privacy: .public) mode=\(String(describing: mode), privacy: .public)")
+        log.notice("translate start: slot=\(slotID.rawValue, privacy: .public) provider=\(connection.providerID.rawValue, privacy: .public) model=\(slot.model, privacy: .public) mode=\(String(describing: mode), privacy: .public)")
 
         var markerParser = NotesMarkerParser()
         var rawTranslation = ""
@@ -323,19 +327,19 @@ public final class TranslationSession: ObservableObject {
                 cache.set(key: cacheKey, translation: sanitized, notes: finalNotes)
             }
             logRequest(
-                context: context, slotID: slotID, slot: slot, mode: mode, start: start,
+                context: context, slotID: slotID, slot: slot, providerID: connection.providerID, mode: mode, start: start,
                 status: "success", promptTokens: promptTokens, completionTokens: completionTokens
             )
         } catch let error as TranslationError {
             logRequest(
-                context: context, slotID: slotID, slot: slot, mode: mode, start: start,
+                context: context, slotID: slotID, slot: slot, providerID: connection.providerID, mode: mode, start: start,
                 status: error.logTag, promptTokens: promptTokens, completionTokens: completionTokens
             )
             fail(error)
         } catch {
             let wrapped = TranslationError.other(code: nil, message: String(describing: error))
             logRequest(
-                context: context, slotID: slotID, slot: slot, mode: mode, start: start,
+                context: context, slotID: slotID, slot: slot, providerID: connection.providerID, mode: mode, start: start,
                 status: wrapped.logTag, promptTokens: promptTokens, completionTokens: completionTokens
             )
             fail(wrapped)
@@ -349,6 +353,7 @@ public final class TranslationSession: ObservableObject {
         context: RunContext,
         slotID: SlotID,
         slot: ModelSlotConfig,
+        providerID: ProviderID,
         mode: TranslationMode,
         start: Date,
         status: String,
@@ -363,7 +368,7 @@ public final class TranslationSession: ObservableObject {
         let latencyMs = Int(Date().timeIntervalSince(start) * 1000)
         requestLog?.record(RequestLogEntry(
             slot: slotID,
-            providerID: slot.providerID,
+            providerID: providerID,
             model: slot.model,
             isImage: context.isImage,
             mode: mode,
@@ -399,13 +404,14 @@ public final class TranslationSession: ObservableObject {
 
     private static func makeProvider(
         slot: ModelSlotConfig,
+        connection: ResolvedConnection,
         apiKey: String,
         firstByteTimeout: TimeInterval,
         totalTimeout: TimeInterval
     ) -> (any TranslationProvider)? {
         ProviderFactory.make(
-            providerID: slot.providerID,
-            baseURL: slot.baseURL,
+            providerID: connection.providerID,
+            baseURL: connection.baseURL,
             apiKey: apiKey,
             model: slot.model,
             firstByteTimeout: firstByteTimeout,

@@ -84,6 +84,43 @@ public struct KeychainStore: Sendable {
         }
     }
 
+    // MARK: - Ключи профилей (раздел B5)
+
+    // Профиль подключения хранит ключ один раз; слоты ссылаются на профиль.
+    private func service(for profile: UUID) -> String {
+        "com.tyrex.llmtranslate.apikey.profile.\(profile.uuidString)"
+    }
+
+    public func setAPIKey(_ key: String, profile: UUID) throws {
+        let query = baseQuery(forRawService: service(for: profile))
+        SecItemDelete(query as CFDictionary)
+        var attributes = query
+        attributes[kSecValueData as String] = Data(key.utf8)
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        attributes[kSecAttrSynchronizable as String] = false
+        let status = SecItemAdd(attributes as CFDictionary, nil)
+        guard status == errSecSuccess else { throw StoreError.osStatus(status) }
+    }
+
+    public func apiKey(profile: UUID) throws -> String? {
+        var query = baseQuery(forRawService: service(for: profile))
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return nil }
+        guard status == errSecSuccess else { throw StoreError.osStatus(status) }
+        guard let data = result as? Data else { throw StoreError.unexpectedData }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    public func deleteAPIKey(profile: UUID) throws {
+        let status = SecItemDelete(baseQuery(forRawService: service(for: profile)) as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw StoreError.osStatus(status)
+        }
+    }
+
     // MARK: - Ключ шифрования кэша (раздел 5/11.4 ТЗ v1.2)
 
     private static let cacheEncryptionKeyService = "com.tyrex.llmtranslate.cache-encryption-key"

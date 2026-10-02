@@ -48,6 +48,73 @@ public final class LLMTranslateSettings: @unchecked Sendable {
         static let imageTotalTimeout = "imageTotalTimeout"
         static let textMaxOutputTokens = "textMaxOutputTokens"
         static let imageMaxOutputTokens = "imageMaxOutputTokens"
+        static let connectionProfiles = "connectionProfiles"
+        static let profilesMigrated = "profilesMigrated"
+    }
+
+    /// Раздел B5: коллекция профилей подключения. Ключи — в Keychain по `id`.
+    public var connectionProfiles: [ConnectionProfile] {
+        get {
+            guard let data = defaults.data(forKey: Key.connectionProfiles) else { return [] }
+            return (try? JSONDecoder().decode([ConnectionProfile].self, from: data)) ?? []
+        }
+        set {
+            guard let data = try? JSONEncoder().encode(newValue) else { return }
+            defaults.set(data, forKey: Key.connectionProfiles)
+        }
+    }
+
+    public func profile(id: UUID) -> ConnectionProfile? {
+        connectionProfiles.first { $0.id == id }
+    }
+
+    /// Добавляет или обновляет профиль (по `id`).
+    public func upsert(_ profile: ConnectionProfile) {
+        var all = connectionProfiles
+        if let index = all.firstIndex(where: { $0.id == profile.id }) {
+            all[index] = profile
+        } else {
+            all.append(profile)
+        }
+        connectionProfiles = all
+    }
+
+    /// Удаляет профиль и его ключ; слоты, которые на него ссылались,
+    /// становятся не настроенными (модель без подключения бессмысленна).
+    public func removeProfile(id: UUID, keychain: KeychainStore) {
+        try? keychain.deleteAPIKey(profile: id)
+        connectionProfiles = connectionProfiles.filter { $0.id != id }
+        for slotID in [SlotID.working, SlotID.strong] {
+            let config = slot(slotID)
+            if config.profileID == id {
+                config.profileID = nil
+                config.model = ""
+                config.supportsImages = false
+            }
+        }
+    }
+
+    /// Подключение слота: через профиль, если слот на него ссылается, иначе
+    /// прежние поля слота и ключ слота (так работают настройки до B5).
+    public func connection(for slotID: SlotID, keychain: KeychainStore) -> ResolvedConnection {
+        let config = slot(slotID)
+        if let profileID = config.profileID, let profile = profile(id: profileID) {
+            return ResolvedConnection(
+                providerID: profile.providerID,
+                baseURL: profile.baseURL,
+                apiKey: (try? keychain.apiKey(profile: profileID)) ?? nil
+            )
+        }
+        return ResolvedConnection(
+            providerID: config.providerID,
+            baseURL: config.baseURL,
+            apiKey: (try? keychain.apiKey(slot: slotID)) ?? nil
+        )
+    }
+
+    public var profilesMigrated: Bool {
+        get { defaults.bool(forKey: Key.profilesMigrated) }
+        set { defaults.set(newValue, forKey: Key.profilesMigrated) }
     }
 
     /// Раздел 7, п. 2 ТЗ: по умолчанию — язык интерфейса устройства.
@@ -185,6 +252,14 @@ public struct ModelSlotConfig: @unchecked Sendable {
         static let baseURLString = "baseURLString"
         static let model = "model"
         static let supportsImages = "supportsImages"
+        static let profileID = "profileID"
+    }
+
+    /// Раздел B5: профиль, через который слот ходит в сеть. `nil` — слот
+    /// настроен по-старому (собственные провайдер/адрес/ключ).
+    public var profileID: UUID? {
+        get { defaults.string(forKey: key(Key.profileID)).flatMap(UUID.init(uuidString:)) }
+        nonmutating set { defaults.set(newValue?.uuidString, forKey: key(Key.profileID)) }
     }
 
     private func key(_ suffix: String) -> String { "\(slot.rawValue).\(suffix)" }
