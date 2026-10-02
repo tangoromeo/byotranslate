@@ -49,7 +49,7 @@ struct ContentView: View {
         NavigationStack {
             Group {
                 if let imageData = pending.imageData {
-                    ImageTranslationView(originalImageData: imageData, appGroupSuiteName: SharedIdentifiers.appGroup)
+                    ScreenshotRegionsView(originalImageData: imageData, appGroupSuiteName: SharedIdentifiers.appGroup)
                 } else if let error = pending.error {
                     ContentUnavailableView(error.localizedUserMessage, systemImage: "exclamationmark.triangle")
                 }

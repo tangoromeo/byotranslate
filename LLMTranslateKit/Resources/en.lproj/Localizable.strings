@@ -25,3 +25,19 @@
 "Нет доступа к медиатеке" = "No access to Photos";
 "Не нашёл ни одного снимка экрана" = "Couldn't find any screenshots";
 "Ошибка перевода" = "Translation error";
+
+/* ScreenshotRegionsView (B6) — Text(..., bundle: .kit) */
+"Ищу текст…" = "Looking for text…";
+"Нажмите на подсвеченный текст, чтобы перевести" = "Tap highlighted text to translate it";
+"Весь экран" = "Whole screen";
+"Фрагменты" = "Fragments";
+"Фрагмент текста" = "Text fragment";
+"Перевод" = "Translation";
+
+/* ScreenshotRegionsView — режим «Плашки» (B6, этап 3) */
+"Текст" = "Text";
+"Перевожу…" = "Translating…";
+"Нажмите на плашку, чтобы увидеть подробности" = "Tap a label for details";
+"Не удалось перевести" = "Couldn't translate";
+"Переведено не всё" = "Not everything was translated";
+"Повторить" = "Retry";

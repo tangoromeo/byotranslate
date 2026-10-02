@@ -85,7 +85,7 @@ private struct ShareRootView: View {
 
     var body: some View {
         NavigationStack {
-            ImageTranslationView(originalImageData: imageData, appGroupSuiteName: SharedIdentifiers.appGroup)
+            ScreenshotRegionsView(originalImageData: imageData, appGroupSuiteName: SharedIdentifiers.appGroup)
                 .navigationTitle("Перевод")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

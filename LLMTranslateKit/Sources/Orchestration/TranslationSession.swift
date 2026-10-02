@@ -61,6 +61,9 @@ public final class TranslationSession: ObservableObject {
         let targetLanguage: Locale.Language
         let isImage: Bool
         let initialMode: TranslationMode
+        /// B6, этап 3: изображение — лист фрагментов, ответ — JSON
+        /// «номер → перевод», а не связный текст.
+        var isRegionSheet = false
     }
 
     // MARK: - Public entry points
@@ -113,6 +116,33 @@ public final class TranslationSession: ObservableObject {
                 initialMode: mode
             )
             await run(context: context, mode: mode, slot: .working)
+        } catch let error as TranslationError {
+            fail(error)
+        } catch {
+            fail(.other(code: nil, message: String(describing: error)))
+        }
+    }
+
+    /// B6, этап 3: лист фрагментов (`RegionSheetRenderer`) одним запросом.
+    /// Результат — JSON в `translation` после завершения (`RegionTranslationParser`);
+    /// режим всегда `.plain`: пояснения к пунктам меню не нужны и ломают формат.
+    public func startRegionSheet(_ sheetData: Data) async {
+        guard let settings = LLMTranslateSettings(appGroupSuiteName: appGroupSuiteName) else {
+            fail(.other(code: nil, message: "App Group не сконфигурирована"))
+            return
+        }
+        do {
+            let prepared = try ImagePreparation.prepare(sourceData: sheetData)
+            var context = RunContext(
+                payload: .image(prepared.data, mime: prepared.mimeType),
+                originalText: "",
+                detectedSourceLanguage: nil,
+                targetLanguage: settings.primaryTargetLanguage,
+                isImage: true,
+                initialMode: .plain
+            )
+            context.isRegionSheet = true
+            await run(context: context, mode: .plain, slot: .working)
         } catch let error as TranslationError {
             fail(error)
         } catch {
@@ -188,9 +218,14 @@ public final class TranslationSession: ObservableObject {
             return
         }
 
-        let basePromptText = context.isImage
-            ? (settings.customImagePrompt ?? PromptBuilder.defaultImageSystemPrompt)
-            : (settings.customTextPrompt ?? PromptBuilder.defaultTextSystemPrompt)
+        let basePromptText: String
+        if context.isRegionSheet {
+            basePromptText = PromptBuilder.defaultRegionsSystemPrompt
+        } else {
+            basePromptText = context.isImage
+                ? (settings.customImagePrompt ?? PromptBuilder.defaultImageSystemPrompt)
+                : (settings.customTextPrompt ?? PromptBuilder.defaultTextSystemPrompt)
+        }
         let notesAddendum = settings.customNotesAddendum ?? PromptBuilder.defaultNotesAddendum
         let systemPrompt = PromptBuilder.systemPrompt(
             for: mode,
