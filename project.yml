@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     MARKETING_VERSION: "0.1"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     IPHONEOS_DEPLOYMENT_TARGET: "18.4"
     TARGETED_DEVICE_FAMILY: "1,2"
     DEVELOPMENT_TEAM: 6X8WWWZ5AU
@@ -41,7 +41,7 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: BYO Translate
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         # Раздел 10.4/13 ТЗ: запрашивается по факту первого вызова E2/E3
@@ -81,8 +81,17 @@ targets:
           ACTOOL_OUT="$TARGET_TEMP_DIR/actool_appicon"
           rm -rf "$ACTOOL_OUT"
           mkdir -p "$ACTOOL_OUT"
+          # Для устройства (iphoneos) actool с --minimum-deployment-target
+          # отрабатывает штатно и собирает Assets.car — он обязателен для
+          # App Store (иконка 1024 «Any Appearance» живёт в каталоге).
+          # Для симулятора тот же флаг роняет actool спорной проверкой
+          # simulator runtime, поэтому там остаётся прежний режим без него.
+          EXTRA=""
+          if [ "$PLATFORM_NAME" = "iphoneos" ]; then
+            EXTRA="--minimum-deployment-target $IPHONEOS_DEPLOYMENT_TARGET --target-device iphone --target-device ipad"
+          fi
           xcrun actool --output-format human-readable-text --notices --warnings \
-            --platform "$PLATFORM_NAME" \
+            --platform "$PLATFORM_NAME" $EXTRA \
             --app-icon AppIcon --output-partial-info-plist "$ACTOOL_OUT/partial.plist" \
             --enable-on-demand-resources NO \
             --compile "$ACTOOL_OUT" \
@@ -90,6 +99,7 @@ targets:
 
           if [ -f "$ACTOOL_OUT/partial.plist" ]; then
             cp "$ACTOOL_OUT"/AppIcon*.png "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/" 2>/dev/null
+            cp "$ACTOOL_OUT/Assets.car" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/" 2>/dev/null
             PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
             /usr/libexec/PlistBuddy -c "Delete :CFBundleIcons" "$PLIST" 2>/dev/null
             /usr/libexec/PlistBuddy -c "Delete :CFBundleIcons~ipad" "$PLIST" 2>/dev/null
@@ -138,7 +148,7 @@ targets:
         PRODUCT_NAME: LLMTranslateTextExt
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
-        SKIP_INSTALL: false
+        SKIP_INSTALL: true
         # LLMTranslateKit не embed-ится в само расширение (embed: false
         # ниже) — единственная копия лежит в LLMTranslate.app/Frameworks,
         # embed-нутая хост-приложением. Без явного добавления
@@ -199,7 +209,7 @@ targets:
         PRODUCT_NAME: LLMTranslateShareExt
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
-        SKIP_INSTALL: false
+        SKIP_INSTALL: true
         # Тот же фикс, что и у LLMTranslateTextExt — см. комментарий там.
         # Классическое app-extension тоже embed-ится на два уровня вложенности
         # (LLMTranslate.app/PlugIns/LLMTranslateShareExt.appex/), поэтому
@@ -250,7 +260,7 @@ targets:
         PRODUCT_NAME: LLMTranslateControl
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
-        SKIP_INSTALL: false
+        SKIP_INSTALL: true
         # Тот же фикс, что и у остальных расширений — см. комментарий у
         # LLMTranslateTextExt.
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
@@ -287,7 +297,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         DEFINES_MODULE: true
-        SKIP_INSTALL: false
+        SKIP_INSTALL: true
         BUILD_LIBRARY_FOR_DISTRIBUTION: false
         SUPPORTS_MACCATALYST: false
     postbuildScripts:
