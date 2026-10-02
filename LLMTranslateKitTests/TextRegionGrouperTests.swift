@@ -164,3 +164,28 @@ extension TextRegionGrouperTests {
         XCTAssertEqual(TextRegionGrouper.deduplicate([a, b, c]), [a, c])
     }
 }
+
+final class TextRegionDetectorBudgetTests: XCTestCase {
+    func test_scaleOne_isAlwaysAllowed_evenOverBudget() {
+        XCTAssertTrue(TextRegionDetector.usableScales(for: CGSize(width: 9000, height: 9000), budget: 1).contains(1))
+    }
+
+    func test_photoInExtension_skipsHeavyScales() {
+        // 2048×1536 ≈ 3,1 Мп; бюджет расширения 9 Мп → 1.5× (7,1 Мп) можно, 1.75× (9,6 Мп) нельзя
+        let scales = TextRegionDetector.usableScales(for: CGSize(width: 2048, height: 1536), budget: 9_000_000)
+        XCTAssertTrue(scales.contains(1.5))
+        XCTAssertFalse(scales.contains(1.75))
+        XCTAssertFalse(scales.contains(2))
+    }
+
+    func test_photoInApp_allowsDoubleButNothingAboveBudget() {
+        let size = CGSize(width: 3000, height: 2250)
+        let scales = TextRegionDetector.usableScales(for: size, budget: 30_000_000)
+        XCTAssertTrue(scales.contains(2))
+        for scale in scales { XCTAssertLessThanOrEqual(size.width * scale * size.height * scale, 30_000_000) }
+    }
+
+    func test_downscalePassesAreAlwaysCheap() {
+        XCTAssertTrue(TextRegionDetector.usableScales(for: CGSize(width: 3000, height: 2250), budget: 7_000_000).contains(0.5))
+    }
+}

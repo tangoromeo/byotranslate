@@ -33,7 +33,20 @@ final class ShareViewController: UIViewController {
         }
     }
 
+    /// Сначала сырые байты файла (JPEG/HEIC на несколько МБ) — без
+    /// декодирования: у расширения жёсткий лимит памяти, а `UIImage` из
+    /// «Фото» на 12 Мп это ~48 МБ растра плюс кодирование огромного PNG.
     private static func loadImageData(from provider: NSItemProvider) async throws -> Data {
+        let raw: Data? = await withCheckedContinuation { continuation in
+            provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                continuation.resume(returning: data)
+            }
+        }
+        if let raw, !raw.isEmpty { return raw }
+        return try await loadImageDataViaItem(from: provider)
+    }
+
+    private static func loadImageDataViaItem(from provider: NSItemProvider) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { item, error in
                 if let error {
@@ -50,7 +63,9 @@ final class ShareViewController: UIViewController {
                         continuation.resume(throwing: error)
                     }
                 case let image as UIImage:
-                    if let data = image.pngData() {
+                    // Уже распакованное изображение: хотя бы не кодировать
+                    // его в полном размере.
+                    if let data = downscaledJPEG(image, maxLongSide: 2048) {
                         continuation.resume(returning: data)
                     } else {
                         continuation.resume(throwing: TranslationError.other(code: nil, message: "не удалось прочитать изображение"))
@@ -60,6 +75,17 @@ final class ShareViewController: UIViewController {
                 }
             }
         }
+    }
+
+    private static func downscaledJPEG(_ image: UIImage, maxLongSide: CGFloat) -> Data? {
+        let longSide = max(image.size.width, image.size.height) * image.scale
+        let shrink = min(1, maxLongSide / max(longSide, 1))
+        let target = CGSize(width: image.size.width * image.scale * shrink, height: image.size.height * image.scale * shrink)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        return UIGraphicsImageRenderer(size: target, format: format)
+            .jpegData(withCompressionQuality: 0.9) { _ in image.draw(in: CGRect(origin: .zero, size: target)) }
     }
 
     private func presentResult(imageData: Data) {

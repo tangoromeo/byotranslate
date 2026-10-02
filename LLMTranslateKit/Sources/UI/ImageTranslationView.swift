@@ -97,7 +97,7 @@ public struct ImageTranslationView: View {
 
     private var thumbnail: some View {
         Group {
-            if let uiImage = UIImage(data: originalImageData) {
+            if let uiImage = ImageDownsampler.uiImage(from: originalImageData, maxLongSide: 1600) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
@@ -111,7 +111,7 @@ public struct ImageTranslationView: View {
     private var originalImageSheet: some View {
         NavigationStack {
             ScrollView([.horizontal, .vertical]) {
-                if let uiImage = UIImage(data: originalImageData) {
+                if let uiImage = ImageDownsampler.uiImage(from: originalImageData, maxLongSide: 1600) {
                     Image(uiImage: uiImage)
                 }
             }

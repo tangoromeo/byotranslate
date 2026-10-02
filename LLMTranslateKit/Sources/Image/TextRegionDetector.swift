@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import Vision
 
 /// Раздел B6 бэклога: где на изображении лежит текст — без чтения самого
@@ -17,18 +18,28 @@ import Vision
 public enum TextRegionDetector {
     /// 1.0 обязателен; остальные дают шанс найти пропущенное. Какие масштабы
     /// сработают, заранее не предсказать: на мак-кадре 1188×2576 строку нашёл
-    /// только 1.5×. Увеличенные проходы нужны и на крупных кадрах телефона
-    /// (1290×2796: 1.5× это уже больше 4000 px), поэтому лимит 6000 px; весь
-    /// набор из семи проходов на телефоне занимает около 0.4 с.
+    /// только 1.5×. Весь набор из семи проходов на телефоне занимает около
+    /// 0.4 с.
     static let scales: [CGFloat] = [1, 0.75, 1.25, 1.5, 1.75, 2, 0.5]
-    static let maxScaledLongSide: CGFloat = 6000
+
+    /// Потолок на один увеличенный проход, в пикселях (RGBA = 4 байта на
+    /// пиксель). У расширений («Поделиться») жёсткий лимит памяти на весь
+    /// процесс, у приложения — на порядок свободнее; фото на 12 Мп без этого
+    /// порождало бы растр в 108 МБ на проход 2×.
+    static var maxScaledPixels: Double {
+        Bundle.main.bundlePath.hasSuffix(".appex") ? 9_000_000 : 30_000_000
+    }
+
+    /// Какие масштабы можно прогнать для изображения такого размера. 1.0
+    /// всегда в списке: без него детектор не работает вообще.
+    static func usableScales(for size: CGSize, budget: Double) -> [CGFloat] {
+        scales.filter { $0 == 1 || size.width * $0 * size.height * $0 <= budget }
+    }
 
     public static func detectRegions(in image: CGImage) throws -> [TextRegion] {
         let size = CGSize(width: image.width, height: image.height)
         var rects: [CGRect] = []
-        for scale in scales {
-            let longSide = max(size.width, size.height) * scale
-            guard scale == 1 || longSide <= maxScaledLongSide else { continue }
+        for scale in usableScales(for: size, budget: maxScaledPixels) {
             guard let scaled = scale == 1 ? image : resized(image, by: scale) else { continue }
             let pass = try detectRects(in: scaled)
             // Обратно в пиксели исходного изображения.

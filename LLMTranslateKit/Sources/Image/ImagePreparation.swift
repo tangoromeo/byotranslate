@@ -33,7 +33,9 @@ public enum ImagePreparation {
 
     #if canImport(UIKit)
     public static func prepare(sourceData: Data) throws -> PreparedImage {
-        guard let sourceImage = UIImage(data: sourceData) else {
+        // Сразу в размер первого шага лестницы: полная распаковка фото в 12 Мп
+        // (~48 МБ) в расширении «Поделиться» убивает процесс.
+        guard let sourceImage = ImageDownsampler.uiImage(from: sourceData, maxLongSide: CGFloat(ImageQualityLadder.defaultMaxLongSide)) else {
             throw TranslationError.other(code: nil, message: "не удалось декодировать изображение")
         }
         let isSmallPNGSource = sourceData.isPNGSignature && sourceData.count < pngSourceSizeThreshold

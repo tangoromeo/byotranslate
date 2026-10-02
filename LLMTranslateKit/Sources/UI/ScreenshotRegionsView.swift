@@ -282,7 +282,7 @@ public struct ScreenshotRegionsView: View {
         mode = .overlay
         selected = nil
         overlay.reset()
-        displayImage = UIImage(data: originalImageData)
+        displayImage = ImageDownsampler.uiImage(from: originalImageData, maxLongSide: ScreenshotImageTools.maxLongSide)
 
         let data = originalImageData
         let regions = await Task.detached(priority: .userInitiated) {
@@ -302,7 +302,10 @@ enum ScreenshotImageTools {
     /// Для кропов важно оригинальное разрешение (в общий запрос скриншот
     /// ужимается до 1024 px, мелкий текст при этом смазывается), но фото в
     /// 12 Мп целиком в память расширения тянуть незачем.
-    private static let maxLongSide: CGFloat = 3000
+    /// В расширении («Поделиться») памяти мало: растр поменьше.
+    static var maxLongSide: CGFloat {
+        Bundle.main.bundlePath.hasSuffix(".appex") ? 2048 : 3000
+    }
 
     static func detectRegions(in data: Data) -> [TextRegion] {
         guard let image = normalizedCGImage(from: data) else { return [] }
@@ -319,18 +322,11 @@ enum ScreenshotImageTools {
         return UIImage(cgImage: part).pngData()
     }
 
-    /// Ориентация «вверх», масштаб 1, ограничение по длинной стороне.
+    /// Ориентация «вверх», масштаб 1, ограничение по длинной стороне. Читается
+    /// сразу в уменьшенном размере (ImageIO): полная распаковка фото в 12 Мп
+    /// стоит ~48 МБ и убивала расширение «Поделиться».
     static func normalizedCGImage(from data: Data) -> CGImage? {
-        guard let image = UIImage(data: data) else { return nil }
-        let pixelSize = CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
-        let shrink = min(1, maxLongSide / max(pixelSize.width, pixelSize.height))
-        let target = CGSize(width: (pixelSize.width * shrink).rounded(), height: (pixelSize.height * shrink).rounded())
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        format.opaque = true
-        return UIGraphicsImageRenderer(size: target, format: format)
-            .image { _ in image.draw(in: CGRect(origin: .zero, size: target)) }
-            .cgImage
+        ImageDownsampler.cgImage(from: data, maxLongSide: maxLongSide)
     }
 }
 #endif
