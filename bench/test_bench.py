@@ -150,6 +150,19 @@ class RankingTests(unittest.TestCase):
 
     def test_weights_sum_to_one(self):
         self.assertAlmostEqual(sum(bench.WEIGHTS.values()), 1.0)
+        self.assertAlmostEqual(sum(bench.QUALITY_WEIGHTS.values()), 1.0)
+
+    def test_quality_focused_rating_prefers_better_chrf_over_cheaper(self):
+        cheap_weaker = {"p": self.pair("noise", diff=3.0, cost=0.03, latency=0.5)}
+        pricey_better = {"p": self.pair("leader", diff=0.0, cost=1.5, latency=3.0)}
+        a, b = bench.score_model(cheap_weaker), bench.score_model(pricey_better)
+        self.assertGreater(a["score"], b["score"], "взвешенный рейтинг выбирает дешёвую")
+        self.assertGreater(b["quality_score"], a["quality_score"], "рейтинг с упором на качество выбирает лучшую")
+
+    def test_quality_focused_uses_raw_deficit_even_inside_noise(self):
+        small = bench.score_model({"p": self.pair("noise", diff=1.0)})["quality_score"]
+        bigger = bench.score_model({"p": self.pair("noise", diff=4.0)})["quality_score"]
+        self.assertGreater(small, bigger)
 
     def test_sentence_count_is_the_smallest_measurement(self):
         scored = bench.score_model({"a": self.pair(ok=100), "b": self.pair(ok=20)})

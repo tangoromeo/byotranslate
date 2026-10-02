@@ -6,25 +6,50 @@ public struct ModelRating: Sendable, Equatable {
     public let key: String
     /// Идентификатор в OpenRouter, на котором мерили.
     public let name: String
-    /// 0...100, выше — лучше.
+    /// Взвешенный рейтинг 0...100 (качество, цена, скорость), выше — лучше.
     public let score: Int
+    /// Рейтинг с упором на качество перевода 0...100: для сильной модели
+    /// («Точнее»), где цена и скорость важны меньше.
+    public let qualityScore: Int
     /// Сколько предложений в самом маленьком замере: до 50 числу верить меньше.
     public let sentences: Int
     /// Замер показал: без отключения размышления модель с лимитом ответа
     /// приложения отдаёт пустые ответы.
     public let disableReasoningRecommended: Bool
 
-    public init(key: String, name: String, score: Int, sentences: Int, disableReasoningRecommended: Bool = false) {
+    public init(
+        key: String,
+        name: String,
+        score: Int,
+        qualityScore: Int? = nil,
+        sentences: Int,
+        disableReasoningRecommended: Bool = false
+    ) {
         self.key = key
         self.name = name
         self.score = score
+        self.qualityScore = qualityScore ?? score
         self.sentences = sentences
         self.disableReasoningRecommended = disableReasoningRecommended
     }
 }
 
-/// Рейтинг моделей по интегральному критерию «лучше»: качество, цена, скорость
-/// (веса и формула — `bench/bench.py rank`). Данные генерируются скриптом в
+/// Какой из двух рейтингов использовать.
+public enum RatingKind: Sendable {
+    /// Взвешенный: качество, цена, скорость. Для рабочей модели.
+    case balanced
+    /// С упором на качество перевода. Для сильной модели.
+    case quality
+}
+
+extension ModelRating {
+    public func score(for kind: RatingKind) -> Int {
+        kind == .balanced ? score : qualityScore
+    }
+}
+
+/// Рейтинги моделей: взвешенный («лучше») и с упором на качество
+/// (веса и формулы — `bench/bench.py rank`). Данные генерируются скриптом в
 /// `ModelRatingsData.swift` и обновляются вместе с релизом приложения:
 /// удалённого конфига нет (раздел 14 ТЗ — единственный сетевой адресат это
 /// endpoint пользователя).
@@ -32,6 +57,9 @@ public enum ModelRatings {
     /// Через сколько дней после замера рейтинг считается устаревшим и в
     /// интерфейсе появляется подсказка. Пересматривать — по `docs/RATINGS.md`.
     public static let staleAfterDays = 120
+    /// Умолчания мастера берутся только из моделей, измеренных не менее чем на
+    /// стольких предложениях: на меньшей выборке отставание — в основном шум.
+    public static let minSentencesForDefaults = 50
 
     // MARK: - Ключ модели
 
@@ -64,13 +92,18 @@ public enum ModelRatings {
         return ratings.first { $0.key == wanted }
     }
 
-    /// Сначала модели с рейтингом по убыванию балла, потом остальные по
-    /// алфавиту: неоценённая модель не «хуже», а просто не измерена.
-    public static func sorted(_ models: [ModelDescriptor], ratings: [ModelRating] = entries) -> [ModelDescriptor] {
+    /// Сначала модели с рейтингом по убыванию балла выбранного рейтинга, потом
+    /// остальные по алфавиту: неоценённая модель не «хуже», а просто не измерена.
+    public static func sorted(
+        _ models: [ModelDescriptor],
+        by kind: RatingKind = .balanced,
+        ratings: [ModelRating] = entries
+    ) -> [ModelDescriptor] {
         let scored = models.map { ($0, rating(for: $0.rawID, in: ratings)) }
         let rated = scored.compactMap { model, rating in rating.map { (model, $0) } }
             .sorted { lhs, rhs in
-                lhs.1.score != rhs.1.score ? lhs.1.score > rhs.1.score : lhs.0.rawID < rhs.0.rawID
+                let (left, right) = (lhs.1.score(for: kind), rhs.1.score(for: kind))
+                return left != right ? left > right : lhs.0.rawID < rhs.0.rawID
             }
             .map(\.0)
         let unrated = scored.filter { $0.1 == nil }.map(\.0)
@@ -78,18 +111,33 @@ public enum ModelRatings {
         return rated + unrated
     }
 
-    /// Умолчания для нового подключения: рабочая — лучшая по рейтингу, сильная —
-    /// следующая. Модели, про которые известно, что они не читают изображения,
-    /// пропускаются: рабочий слот получает и скриншоты. Нет оценённых моделей —
-    /// `nil` (выбор остаётся за пользователем).
+    /// Умолчания для нового подключения. Рабочая — лучшая по взвешенному
+    /// рейтингу. Сильная — лучшая по качеству среди остальных, но только если по
+    /// качеству она не слабее рабочей: «Точнее» на модели, которая по замеру
+    /// хуже, бессмысленно. Модели, про которые известно, что они не читают
+    /// изображения, пропускаются (рабочий слот получает и скриншоты); модели с
+    /// малой выборкой замера не подставляются. Нет подходящих — `nil`, выбор за
+    /// пользователем.
     public static func defaults(
         from models: [ModelDescriptor],
         ratings: [ModelRating] = entries
     ) -> (working: ModelDescriptor?, strong: ModelDescriptor?) {
-        let candidates = sorted(models, ratings: ratings).filter {
-            rating(for: $0.rawID, in: ratings) != nil && $0.supportsImages != false
+        func eligible(_ model: ModelDescriptor) -> Bool {
+            guard model.supportsImages != false,
+                  let rating = rating(for: model.rawID, in: ratings)
+            else { return false }
+            return rating.sentences >= minSentencesForDefaults
         }
-        return (candidates.first, candidates.dropFirst().first)
+        let working = sorted(models, by: .balanced, ratings: ratings).first(where: eligible)
+        guard let working else { return (nil, nil) }
+        let workingQuality = rating(for: working.rawID, in: ratings)?.qualityScore ?? 0
+        let strong = sorted(models, by: .quality, ratings: ratings).first { candidate in
+            candidate.rawID != working.rawID && eligible(candidate)
+        }
+        guard let strong, let strongRating = rating(for: strong.rawID, in: ratings),
+              strongRating.qualityScore >= workingQuality
+        else { return (working, nil) }
+        return (working, strong)
     }
 
     // MARK: - Свежесть данных

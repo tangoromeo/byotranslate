@@ -298,7 +298,12 @@ struct SlotSettingsView: View {
         }
         .sheet(isPresented: $isShowingModelPicker) {
             let connection = activeConnection()
-            ModelPickerView(providerID: connection.providerID, currentAPIKey: connection.apiKey, baseURL: connection.baseURL) { descriptor in
+            ModelPickerView(
+                providerID: connection.providerID,
+                currentAPIKey: connection.apiKey,
+                baseURL: connection.baseURL,
+                ranking: slot == .strong ? .quality : .balanced
+            ) { descriptor in
                 model = descriptor.rawID
                 supportsImages = descriptor.supportsImages ?? supportsImages
                 // Рейтинг знает, каким моделям размышление мешает с нашим лимитом ответа.
@@ -399,7 +404,7 @@ struct ModelChoiceFields: View {
                 .buttonStyle(.borderless)
         }
         if let rating = ModelRatings.rating(for: model) {
-            Text("Рейтинг «лучше»: \(rating.score) из 100")
+            Text("Рейтинг: взвешенный \(rating.score), по качеству \(rating.qualityScore) (из 100)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

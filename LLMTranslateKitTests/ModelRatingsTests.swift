@@ -38,45 +38,80 @@ final class ModelRatingsTests: XCTestCase {
 
     // MARK: - Сортировка и умолчания (на своих данных, а не на сгенерированных)
 
+    /// score — взвешенный, q — с упором на качество.
     private let ratings = [
-        ModelRating(key: "a", name: "v/a", score: 90, sentences: 100),
-        ModelRating(key: "b", name: "v/b", score: 70, sentences: 100),
-        ModelRating(key: "c", name: "v/c", score: 70, sentences: 100),
-        ModelRating(key: "d", name: "v/d", score: 50, sentences: 100),
+        ModelRating(key: "a", name: "v/a", score: 90, qualityScore: 60, sentences: 100),
+        ModelRating(key: "b", name: "v/b", score: 70, qualityScore: 95, sentences: 100),
+        ModelRating(key: "c", name: "v/c", score: 70, qualityScore: 80, sentences: 100),
+        ModelRating(key: "d", name: "v/d", score: 50, qualityScore: 40, sentences: 100),
+        ModelRating(key: "tiny", name: "v/tiny", score: 99, qualityScore: 99, sentences: 20),
     ]
 
     private func descriptor(_ id: String, images: Bool? = nil) -> ModelDescriptor {
         ModelDescriptor(rawID: id, supportsImages: images)
     }
 
-    func test_sorted_ratedFirstByScore_thenUnratedAlphabetically() {
+    func test_sorted_balanced_ratedFirstByScore_thenUnratedAlphabetically() {
         let models = ["v/zzz", "v/d", "v/b", "v/aaa", "v/a", "v/c"].map { descriptor($0) }
-        let order = ModelRatings.sorted(models, ratings: ratings).map(\.rawID)
+        let order = ModelRatings.sorted(models, by: .balanced, ratings: ratings).map(\.rawID)
         XCTAssertEqual(order, ["v/a", "v/b", "v/c", "v/d", "v/aaa", "v/zzz"])
+    }
+
+    func test_sorted_quality_usesTheOtherScore() {
+        let models = ["v/a", "v/b", "v/c", "v/d"].map { descriptor($0) }
+        XCTAssertEqual(ModelRatings.sorted(models, by: .quality, ratings: ratings).map(\.rawID), ["v/b", "v/c", "v/a", "v/d"])
     }
 
     func test_sorted_tieBrokenByIdDeterministically() {
         let models = [descriptor("v/c"), descriptor("v/b")]
-        XCTAssertEqual(ModelRatings.sorted(models, ratings: ratings).map(\.rawID), ["v/b", "v/c"])
+        XCTAssertEqual(ModelRatings.sorted(models, by: .balanced, ratings: ratings).map(\.rawID), ["v/b", "v/c"])
     }
 
     func test_sorted_doesNotLoseOrDuplicateModels() {
         let models = (0..<20).map { descriptor("v/m\($0)") } + [descriptor("v/a")]
-        XCTAssertEqual(ModelRatings.sorted(models, ratings: ratings).count, models.count)
+        for kind in [RatingKind.balanced, .quality] {
+            XCTAssertEqual(ModelRatings.sorted(models, by: kind, ratings: ratings).count, models.count)
+        }
     }
 
-    func test_defaults_pickTwoBestRated() {
+    func test_qualityScore_defaultsToScore_whenNotGiven() {
+        XCTAssertEqual(ModelRating(key: "x", name: "x", score: 42, sentences: 100).qualityScore, 42)
+    }
+
+    func test_defaults_workingIsBestBalanced_strongIsBestQualityAmongOthers() {
         let models = ["v/d", "v/a", "v/b", "v/x"].map { descriptor($0) }
         let result = ModelRatings.defaults(from: models, ratings: ratings)
+        XCTAssertEqual(result.working?.rawID, "v/a")   // взвешенный: 90
+        XCTAssertEqual(result.strong?.rawID, "v/b")    // качество: 95, выше, чем у рабочей (60)
+    }
+
+    func test_defaults_strongIsNeverWeakerInQualityThanWorking() {
+        // рабочая v/b — лучшая и по качеству (95): сильнее неё никого нет
+        let only = [ModelRating(key: "b", name: "v/b", score: 90, qualityScore: 95, sentences: 100),
+                    ModelRating(key: "e", name: "v/e", score: 60, qualityScore: 50, sentences: 100)]
+        let models = [descriptor("v/b"), descriptor("v/e")]
+        let result = ModelRatings.defaults(from: models, ratings: only)
+        XCTAssertEqual(result.working?.rawID, "v/b")
+        XCTAssertNil(result.strong, "«Точнее» на модели, которая по замеру слабее, не предлагаем")
+    }
+
+    func test_defaults_skipTinySamples() {
+        let models = [descriptor("v/tiny"), descriptor("v/a"), descriptor("v/b")]
+        let result = ModelRatings.defaults(from: models, ratings: ratings)
         XCTAssertEqual(result.working?.rawID, "v/a")
-        XCTAssertEqual(result.strong?.rawID, "v/b")
+        XCTAssertNotEqual(result.strong?.rawID, "v/tiny")
     }
 
     func test_defaults_skipModelsKnownNotToReadImages() {
+        // v/a — лучшая по взвешенному, но не читает изображения: рабочей не станет
         let models = [descriptor("v/a", images: false), descriptor("v/b", images: true), descriptor("v/c", images: nil)]
         let result = ModelRatings.defaults(from: models, ratings: ratings)
         XCTAssertEqual(result.working?.rawID, "v/b")
-        XCTAssertEqual(result.strong?.rawID, "v/c")
+        // v/c по качеству (80) слабее рабочей v/b (95) — «Точнее» на ней не предлагаем
+        XCTAssertNil(result.strong)
+        // и сама v/a не может быть сильной, пока известно, что она не читает изображения
+        let withA = ModelRatings.defaults(from: [descriptor("v/a", images: false), descriptor("v/d", images: true)], ratings: ratings)
+        XCTAssertEqual(withA.working?.rawID, "v/d")
     }
 
     func test_defaults_noRatedModels_leavesChoiceToUser() {
@@ -106,7 +141,7 @@ final class ModelRatingsTests: XCTestCase {
         XCTAssertNotNil(ModelRatings.measuredDate, "measuredAt должен быть датой yyyy-MM-dd")
         let keys = ModelRatings.entries.map(\.key)
         XCTAssertEqual(Set(keys).count, keys.count, "ключи уникальны")
-        XCTAssertTrue(ModelRatings.entries.allSatisfy { (0...100).contains($0.score) })
+        XCTAssertTrue(ModelRatings.entries.allSatisfy { (0...100).contains($0.score) && (0...100).contains($0.qualityScore) })
         for entry in ModelRatings.entries {
             XCTAssertEqual(ModelRatings.key(for: entry.name), entry.key, "ключ записи совпадает с ключом её имени")
         }

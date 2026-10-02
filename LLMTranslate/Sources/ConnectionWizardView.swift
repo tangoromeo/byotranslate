@@ -323,7 +323,7 @@ private struct ModelsStep: View {
             } header: {
                 Text("Рабочая модель")
             } footer: {
-                Text("Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения. Заполнено по рейтингу «лучше»: можно заменить.")
+                Text("Переводит выделенный текст и скриншоты — нужна быстрая и недорогая. Для скриншотов модель должна понимать изображения. Заполнено по взвешенному рейтингу: можно заменить.")
             }
 
             Section {
@@ -337,7 +337,7 @@ private struct ModelsStep: View {
             } header: {
                 Text("Сильная модель (необязательно)")
             } footer: {
-                Text("Включается кнопкой «Точнее», когда нужен более аккуратный перевод.")
+                Text("Включается кнопкой «Точнее», когда нужен более аккуратный перевод. Подсказка — по рейтингу с упором на качество; если лучшей по качеству модели нет, поле остаётся пустым.")
             }
 
             Section {
@@ -353,7 +353,12 @@ private struct ModelsStep: View {
         .navigationBarBackButtonHidden()
         .sheet(item: $pickTarget) { target in
             if let profile = wizard.profile {
-                ModelPickerView(providerID: profile.providerID, currentAPIKey: wizard.savedKey, baseURL: profile.baseURL) { descriptor in
+                ModelPickerView(
+                    providerID: profile.providerID,
+                    currentAPIKey: wizard.savedKey,
+                    baseURL: profile.baseURL,
+                    ranking: target == .strong ? .quality : .balanced
+                ) { descriptor in
                     let images = wizard.defaultImages(for: descriptor)
                     switch target {
                     case .working:

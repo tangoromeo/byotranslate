@@ -424,6 +424,10 @@ def cmd_retry(args: argparse.Namespace) -> None:
 # Рейтинг «лучше»: интегральный критерий (качество, цена, скорость)
 # ----------------------------------------------------------------------------
 WEIGHTS = {"quality": 0.5, "cost": 0.3, "speed": 0.2}
+# Второй рейтинг — для сильной модели («Точнее»): качество важнее цены и скорости, и учитывается
+# сырое отставание от лидера, а не только значимое/незначимое.
+QUALITY_WEIGHTS = {"quality": 0.8, "cost": 0.1, "speed": 0.1}
+QUALITY_FOCUS_SCALE = 6.0               # отставание в chrF-пунктах, при котором оценка качества падает до 0
 COST_BEST, COST_WORST = 0.03, 3.0      # $ за 1000 предложений: ≤ лучшего → 1.0, ≥ худшего → 0.0 (логарифм)
 LATENCY_BEST, LATENCY_WORST = 0.5, 10.0  # секунд на ответ
 QUALITY_SCALE = 10.0                    # отставание в chrF-пунктах, при котором оценка качества падает до 0
@@ -452,8 +456,14 @@ def score_model(pairs: dict[str, dict]) -> dict | None:
     cost_score = _log_scale(cost, COST_BEST, COST_WORST)
     speed_score = _log_scale(latency, LATENCY_BEST, LATENCY_WORST)
     total = WEIGHTS["quality"] * quality + WEIGHTS["cost"] * cost_score + WEIGHTS["speed"] * speed_score
+    # без порога значимости: разница в 1–2 пункта chrF тоже что-то говорит, пусть и в пределах шума
+    raw_quality = statistics.fmean(max(0.0, 1.0 - max(p["diff"], 0.0) / QUALITY_FOCUS_SCALE) for p in usable)
+    quality_total = (QUALITY_WEIGHTS["quality"] * raw_quality + QUALITY_WEIGHTS["cost"] * cost_score
+                     + QUALITY_WEIGHTS["speed"] * speed_score)
     return {
         "score": round(100 * total),
+        "quality_score": round(100 * quality_total),
+        "raw_quality": round(raw_quality, 3),
         "quality": round(quality, 3), "cost_score": round(cost_score, 3), "speed_score": round(speed_score, 3),
         "cost_per_1000": round(cost, 4), "latency": round(latency, 2),
         "sentences": min(p["ok"] for p in usable),
@@ -479,7 +489,7 @@ def build_ratings(measurements: dict) -> list[dict]:
         if scored:
             rated.append({"name": model, "key": model_key(model), **scored,
                           "disable_reasoning": bool(info.get("reasoningOffRecommended"))})
-    rated.sort(key=lambda r: (-r["score"], r["name"]))
+    rated.sort(key=lambda r: (-r["score"], -r["quality_score"], r["name"]))
     return rated
 
 
@@ -487,7 +497,9 @@ def swift_source(measurements: dict, ratings: list[dict]) -> str:
     lines = [
         "// СГЕНЕРИРОВАНО: python3 bench/bench.py rank — не править вручную.",
         f"// Замер: {measurements['measuredAt']}, корпус {measurements['corpus']}, seed {measurements['seed']}; метод v{METHOD_VERSION}.",
-        f"// Критерий «лучше» = {WEIGHTS['quality']}·качество + {WEIGHTS['cost']}·цена + {WEIGHTS['speed']}·скорость;",
+        f"// Взвешенный = {WEIGHTS['quality']}·качество + {WEIGHTS['cost']}·цена + {WEIGHTS['speed']}·скорость;",
+        f"// с упором на качество = {QUALITY_WEIGHTS['quality']}·качество + {QUALITY_WEIGHTS['cost']}·цена + {QUALITY_WEIGHTS['speed']}·скорость",
+        f"// (качество по сырому отставанию от лидера: 1 − отставание/{QUALITY_FOCUS_SCALE:g} chrF);",
         f"// цена {COST_BEST}→1 … {COST_WORST}→0 $/1000 предл. (лог.), задержка {LATENCY_BEST}→1 … {LATENCY_WORST}→0 с (лог.),",
         f"// качество: 1 если не значимо хуже лидера, иначе 1 − отставание/{QUALITY_SCALE:g} chrF.",
         "// Пересмотр: docs/RATINGS.md.",
@@ -500,7 +512,7 @@ def swift_source(measurements: dict, ratings: list[dict]) -> str:
     for r in ratings:
         reasoning = ", disableReasoningRecommended: true" if r["disable_reasoning"] else ""
         lines.append(
-            f'        ModelRating(key: "{r["key"]}", name: "{r["name"]}", score: {r["score"]}, sentences: {r["sentences"]}{reasoning}),'
+            f'        ModelRating(key: "{r["key"]}", name: "{r["name"]}", score: {r["score"]}, qualityScore: {r["quality_score"]}, sentences: {r["sentences"]}{reasoning}),'
         )
     lines += ["    ]", "}", ""]
     return "\n".join(lines)
@@ -534,7 +546,7 @@ def cmd_rank(args: argparse.Namespace) -> None:
     measurements = json.loads(Path(args.measurements).read_text(encoding="utf-8"))
     ratings = build_ratings(measurements)
     for i, r in enumerate(ratings, 1):
-        print(f"{i:2}. {r['score']:3}  {r['name']:42} качество {r['quality']:.2f}  цена {r['cost_score']:.2f} "
+        print(f"{i:2}. {r['score']:3} / кач. {r['quality_score']:3}  {r['name']:42} качество {r['quality']:.2f}  цена {r['cost_score']:.2f} "
               f"(${r['cost_per_1000']}/1000)  скорость {r['speed_score']:.2f} ({r['latency']}с)  n={r['sentences']}")
     if args.swift:
         Path(args.swift).write_text(swift_source(measurements, ratings), encoding="utf-8")

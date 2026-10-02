@@ -9,6 +9,9 @@ struct ModelPickerView: View {
     let providerID: ProviderID
     let currentAPIKey: String?
     let baseURL: URL
+    /// По какому рейтингу сортировать и какой балл показывать: для рабочей
+    /// модели — взвешенный, для сильной — с упором на качество.
+    let ranking: RatingKind
     let onSelect: (ModelDescriptor) -> Void
 
     init(
@@ -16,11 +19,13 @@ struct ModelPickerView: View {
         currentAPIKey: String?,
         baseURL: URL,
         imagesOnly: Bool = false,
+        ranking: RatingKind = .balanced,
         onSelect: @escaping (ModelDescriptor) -> Void
     ) {
         self.providerID = providerID
         self.currentAPIKey = currentAPIKey
         self.baseURL = baseURL
+        self.ranking = ranking
         self.onSelect = onSelect
         _imagesOnly = State(initialValue: imagesOnly)
     }
@@ -113,18 +118,23 @@ struct ModelPickerView: View {
         if ModelRatings.isStale() {
             return Text("Рейтинг устарел (замер \(date)): обновится с новой версией приложения. Сначала модели с рейтингом.")
         }
-        return Text("Сначала лучшие по рейтингу «лучше» (замер \(date)). Модели без оценки — внизу по алфавиту.")
+        switch ranking {
+        case .balanced:
+            return Text("Сначала лучшие по взвешенному рейтингу: качество, цена, скорость (замер \(date)). Модели без оценки — внизу по алфавиту.")
+        case .quality:
+            return Text("Сначала лучшие по качеству перевода (замер \(date)); цена и скорость учтены слабо. Модели без оценки — внизу по алфавиту.")
+        }
     }
 
     @ViewBuilder
     private func ratingBadge(for rawID: String) -> some View {
         if let rating = ModelRatings.rating(for: rawID) {
-            Text("\(rating.score)")
+            Text("\(rating.score(for: ranking))")
                 .font(.caption.monospacedDigit().weight(.semibold))
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
                 .background(Capsule().fill(Color.green.opacity(0.18)))
-                .accessibilityLabel(Text("Рейтинг \(rating.score) из 100"))
+                .accessibilityLabel(Text("Рейтинг \(rating.score(for: ranking)) из 100"))
         }
     }
 
@@ -152,7 +162,7 @@ struct ModelPickerView: View {
             return
         }
         do {
-            models = ModelRatings.sorted(try await provider.listModels())
+            models = ModelRatings.sorted(try await provider.listModels(), by: ranking)
         } catch let error as TranslationError {
             errorMessage = error.localizedUserMessage
         } catch {
