@@ -309,7 +309,8 @@ enum ScreenshotImageTools {
 
     static func detectRegions(in data: Data) -> [TextRegion] {
         guard let image = normalizedCGImage(from: data) else { return [] }
-        return (try? TextRegionDetector.detectRegions(in: image)) ?? []
+        let regions = (try? TextRegionDetector.detectRegions(in: image)) ?? []
+        return StatusBarFilter.removingStatusBar(regions, imageSize: CGSize(width: image.width, height: image.height))
     }
 
     static func cropData(from data: Data, region: TextRegion) -> Data? {

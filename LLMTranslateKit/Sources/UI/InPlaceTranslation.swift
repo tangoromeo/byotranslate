@@ -29,6 +29,8 @@ public enum InPlaceTranslation {
 
     @MainActor
     public static func translate(imageData: Data, appGroupSuiteName: String) async throws -> Output {
+        removeDebugArtifacts(appGroupSuiteName: appGroupSuiteName)
+
         let regions = await Task.detached(priority: .userInitiated) {
             ScreenshotImageTools.detectRegions(in: imageData)
         }.value
@@ -52,6 +54,17 @@ public enum InPlaceTranslation {
         }.value
         guard let rendered else { throw Failure.unreadableImage }
         return Output(imageData: rendered, regionCount: regions.count, translatedCount: translations.count)
+    }
+}
+
+/// Разовая чистка: отладочные сборки сохраняли снимки и кропы для разбора
+/// промахов кэша в Library/Caches App Group. Сейчас они не пишутся; удаляем остатки.
+private func removeDebugArtifacts(appGroupSuiteName: String) {
+    guard let caches = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupSuiteName)?
+        .appendingPathComponent("Library/Caches", isDirectory: true),
+          let names = try? FileManager.default.contentsOfDirectory(atPath: caches.path) else { return }
+    for name in names where name.hasPrefix("full-") || name.hasPrefix("miss-") {
+        try? FileManager.default.removeItem(at: caches.appendingPathComponent(name))
     }
 }
 

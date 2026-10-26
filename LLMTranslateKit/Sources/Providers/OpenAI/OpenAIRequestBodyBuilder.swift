@@ -31,7 +31,20 @@ public enum OpenAIRequestBodyBuilder {
         if request.disableReasoning, isOpenRouter(baseURL) {
             body["reasoning"] = ["enabled": false]
         }
+        if let temperature = request.temperature, acceptsTemperature(model: model, baseURL: baseURL) {
+            body["temperature"] = temperature
+        }
         return body
+    }
+
+    /// Модели OpenAI с размышлением (`o1`, `o3`, `gpt-5…`) при прямом
+    /// подключении отклоняют температуру, отличную от стандартной. OpenRouter и
+    /// прочие совместимые серверы неподдерживаемый параметр просто игнорируют.
+    static func acceptsTemperature(model: String, baseURL: URL?) -> Bool {
+        guard baseURL?.host?.lowercased() == "api.openai.com" else { return true }
+        let id = model.lowercased()
+        let isReasoning = id.hasPrefix("gpt-5") || id.range(of: "^o[0-9]", options: .regularExpression) != nil
+        return !isReasoning
     }
 
     static func isOpenRouter(_ baseURL: URL?) -> Bool {

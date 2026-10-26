@@ -23,6 +23,10 @@ public struct TranslationRequest: Sendable {
     /// провайдеры флаг игнорируют. Размышляющие модели с лимитом ответа
     /// приложения могут отдать пустой ответ: всё уходит на рассуждения.
     public let disableReasoning: Bool
+    /// Температура генерации. `nil` — не отправлять (умолчание провайдера).
+    /// Перевод выставляет 0: с умолчанием (обычно 1) один и тот же снимок
+    /// переводился по-разному.
+    public let temperature: Double?
 
     public init(
         payload: Payload,
@@ -32,7 +36,8 @@ public struct TranslationRequest: Sendable {
         systemPrompt: String,
         glossary: [String: String] = [:],
         maxOutputTokens: Int = 2048,
-        disableReasoning: Bool = false
+        disableReasoning: Bool = false,
+        temperature: Double? = nil
     ) {
         self.payload = payload
         self.detectedSourceLanguage = detectedSourceLanguage
@@ -42,5 +47,6 @@ public struct TranslationRequest: Sendable {
         self.glossary = glossary
         self.maxOutputTokens = maxOutputTokens
         self.disableReasoning = disableReasoning
+        self.temperature = temperature
     }
 }

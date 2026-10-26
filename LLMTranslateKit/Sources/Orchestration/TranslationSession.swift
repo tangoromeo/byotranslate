@@ -246,7 +246,10 @@ public final class TranslationSession: ObservableObject {
             mode: mode,
             systemPrompt: systemPrompt,
             maxOutputTokens: context.isImage ? settings.imageMaxOutputTokens : settings.textMaxOutputTokens,
-            disableReasoning: slot.disableReasoning
+            disableReasoning: slot.disableReasoning,
+            // С умолчанием провайдера (обычно 1) один и тот же снимок переводился
+            // по-разному; 0 — максимально повторяемый перевод.
+            temperature: 0
         )
 
         // Раздел 11.4 ТЗ v1.2: кэш только для текста, никогда для изображений.

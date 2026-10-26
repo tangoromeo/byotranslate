@@ -19,7 +19,7 @@ public enum AnthropicRequestBodyBuilder {
             ] as [Any]
         }
 
-        return [
+        var body: [String: Any] = [
             "model": model,
             "stream": true,
             "max_tokens": request.maxOutputTokens,
@@ -28,5 +28,9 @@ public enum AnthropicRequestBodyBuilder {
                 ["role": "user", "content": userContent],
             ],
         ]
+        if let temperature = request.temperature {
+            body["temperature"] = temperature
+        }
+        return body
     }
 }

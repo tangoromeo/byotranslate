@@ -63,9 +63,34 @@ final class RegionOverlayModel: ObservableObject {
         isTargetRTL = LLMTranslateSettings(appGroupSuiteName: appGroupSuiteName)
             .map { TextDirectionResolver.isRightToLeft($0.primaryTargetLanguage) } ?? false
 
+        // Кэш фрагментов: одинаковые надписи (тот же пункт меню на повторном
+        // снимке) берутся из кэша — без запроса и всегда одинаково.
+        let cache = RegionTranslationCache(appGroupSuiteName: appGroupSuiteName)
+        var fingerprints: [Int: CropFingerprint.Signature] = [:]
+        var fromCache: Set<Int> = []
+        if let cache {
+            let prepared = await Task.detached(priority: .userInitiated) {
+                RegionOverlayPreparation.fingerprints(imageData: imageData, regions: regions)
+            }.value
+            guard myGeneration == generation else { return }
+            fingerprints = prepared.byRegion
+            backgrounds.merge(prepared.backgrounds) { current, _ in current }
+            var unique: [String: CropFingerprint.Signature] = [:]
+            for signature in fingerprints.values { unique[signature.key] = signature }
+            let hits = cache.lookup(Array(unique.values))
+            for (id, signature) in fingerprints {
+                guard let text = hits[signature.key] else { continue }
+                // Пустая строка в кэше — «модель здесь перевода не даёт» (значок,
+                // цифры): плашки нет, но и запроса тоже.
+                if !text.isEmpty { translations[id] = text }
+                fromCache.insert(id)
+            }
+            log.notice("region cache: \(fromCache.count, privacy: .public) of \(regions.count, privacy: .public) from cache")
+        }
+
         // Модели иногда пропускают номер или отдают пустой перевод: областям,
         // оставшимся без перевода, даём один повторный проход отдельным листом.
-        var remaining = regions
+        var remaining = regions.filter { translations[$0.id] == nil && !fromCache.contains($0.id) }
         for round in 0..<2 {
             guard !remaining.isEmpty, myGeneration == generation else { break }
             let covered = await runRound(
@@ -76,6 +101,20 @@ final class RegionOverlayModel: ObservableObject {
             log.notice("regions round \(round, privacy: .public): untranslated=\(remaining.count, privacy: .public) of \(regions.count, privacy: .public)")
         }
         guard myGeneration == generation else { return }
+        if let cache {
+            var fresh: [(signature: CropFingerprint.Signature, translation: String)] = []
+            // Без ошибки сети/ключа: области, которым модель так и не дала перевод
+            // после повторного прохода, запоминаем пустой строкой.
+            let sentToModel = error == nil
+            for (id, fingerprint) in fingerprints where !fromCache.contains(id) {
+                if let text = translations[id] {
+                    fresh.append((fingerprint, text))
+                } else if sentToModel {
+                    fresh.append((fingerprint, ""))
+                }
+            }
+            cache.store(fresh)
+        }
         isRunning = false
     }
 
@@ -126,6 +165,32 @@ struct PreparedRegionSheet: Sendable {
 
 /// Вне `@MainActor`: декодирование, кропы и рендеринг листов — тяжёлая работа.
 enum RegionOverlayPreparation {
+    struct Fingerprints: Sendable {
+        let byRegion: [Int: CropFingerprint.Signature]
+        let backgrounds: [Int: RegionBackground]
+    }
+
+
+    /// Отпечатки надписей по точной рамке области (без полей: поля тянут соседей,
+    /// и одна и та же кнопка в другом окружении получила бы другой отпечаток).
+    static func fingerprints(imageData: Data, regions: [TextRegion]) -> Fingerprints {
+        guard let image = ScreenshotImageTools.normalizedCGImage(from: imageData) else {
+            return Fingerprints(byRegion: [:], backgrounds: [:])
+        }
+        let width = Double(image.width), height = Double(image.height)
+        var result: [Int: CropFingerprint.Signature] = [:]
+        for region in regions {
+            let rect = CGRect(
+                x: region.rect.minX * width, y: region.rect.minY * height,
+                width: region.rect.width * width, height: region.rect.height * height
+            ).integral
+            if let crop = image.cropping(to: rect), let fingerprint = CropFingerprint.signature(crop) {
+                result[region.id] = fingerprint
+            }
+        }
+        return Fingerprints(byRegion: result, backgrounds: RegionBackgroundSampler.sample(image: image, regions: regions))
+    }
+
     struct Result: Sendable {
         let sheets: [PreparedRegionSheet]
         let backgrounds: [Int: RegionBackground]

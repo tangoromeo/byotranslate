@@ -18,12 +18,16 @@ public enum GeminiRequestBodyBuilder {
             ]
         }
 
+        var generationConfig: [String: Any] = ["maxOutputTokens": request.maxOutputTokens]
+        if let temperature = request.temperature {
+            generationConfig["temperature"] = temperature
+        }
         return [
             "contents": [
                 ["role": "user", "parts": parts],
             ],
             "systemInstruction": ["parts": [["text": request.systemPrompt]]],
-            "generationConfig": ["maxOutputTokens": request.maxOutputTokens],
+            "generationConfig": generationConfig,
         ]
     }
 }

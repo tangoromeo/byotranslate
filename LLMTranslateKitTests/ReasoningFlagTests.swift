@@ -46,3 +46,34 @@ final class ReasoningFlagTests: XCTestCase {
         XCTAssertFalse(settings.slot(.strong).disableReasoning, "слоты независимы")
     }
 }
+
+/// Температура: перевод должен быть повторяемым.
+final class TemperatureTests: XCTestCase {
+    private func request(_ temperature: Double?) -> TranslationRequest {
+        TranslationRequest(
+            payload: .text("Hello"), detectedSourceLanguage: nil, targetLanguage: Locale.Language(identifier: "ru"),
+            systemPrompt: "translate", temperature: temperature
+        )
+    }
+
+    func test_notSetByDefault_soSnapshotsStayTheSame() {
+        XCTAssertNil(OpenAIRequestBodyBuilder.body(for: request(nil), model: "m")["temperature"])
+        XCTAssertNil(AnthropicRequestBodyBuilder.body(for: request(nil), model: "m")["temperature"])
+        XCTAssertNil((GeminiRequestBodyBuilder.body(for: request(nil))["generationConfig"] as? [String: Any])?["temperature"])
+    }
+
+    func test_zeroIsSentToAllProviders() {
+        let openRouter = URL(string: "https://openrouter.ai/api/v1")!
+        XCTAssertEqual(OpenAIRequestBodyBuilder.body(for: request(0), model: "openai/gpt-5.4", baseURL: openRouter)["temperature"] as? Double, 0)
+        XCTAssertEqual(AnthropicRequestBodyBuilder.body(for: request(0), model: "m")["temperature"] as? Double, 0)
+        XCTAssertEqual((GeminiRequestBodyBuilder.body(for: request(0))["generationConfig"] as? [String: Any])?["temperature"] as? Double, 0)
+    }
+
+    func test_directOpenAIReasoningModels_getNoTemperature() {
+        let openAI = URL(string: "https://api.openai.com/v1")!
+        for model in ["gpt-5.4", "gpt-5-mini", "o3", "o4-mini"] {
+            XCTAssertNil(OpenAIRequestBodyBuilder.body(for: request(0), model: model, baseURL: openAI)["temperature"], model)
+        }
+        XCTAssertEqual(OpenAIRequestBodyBuilder.body(for: request(0), model: "gpt-4.1-mini", baseURL: openAI)["temperature"] as? Double, 0)
+    }
+}
