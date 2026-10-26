@@ -15,6 +15,10 @@ public enum OpenAIRequestBodyBuilder {
                 ["type": "text", "text": ""],
                 ["type": "image_url", "image_url": ["url": "data:\(mime);base64,\(base64)"]],
             ] as [Any]
+        case let .images(images, text):
+            userContent = [["type": "text", "text": text]] + images.map { image in
+                ["type": "image_url", "image_url": ["url": "data:\(image.mime);base64,\(image.data.base64EncodedString())"]]
+            } as [Any]
         }
 
         var body: [String: Any] = [

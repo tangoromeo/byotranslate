@@ -98,7 +98,9 @@ public final class TranslationSession: ObservableObject {
 
     /// Раздел 10.6/10.8 ТЗ: точка входа для E1/E2/E3 — язык всегда
     /// `primaryTarget`, локальное определение языка не выполняется.
-    public func startImage(_ sourceData: Data) async {
+    /// `contextHint` — текст к изображению (для фрагмента экрана: раскладка
+    /// экрана и переводы соседних надписей), отправляется вместе с ним.
+    public func startImage(_ sourceData: Data, contextHint: String? = nil) async {
         guard let settings = LLMTranslateSettings(appGroupSuiteName: appGroupSuiteName) else {
             fail(.other(code: nil, message: "App Group не сконфигурирована"))
             return
@@ -107,8 +109,11 @@ public final class TranslationSession: ObservableObject {
             // Раздел 10.7 ТЗ: подготовка (даунскейл/кодирование/лимит payload).
             let prepared = try ImagePreparation.prepare(sourceData: sourceData)
             let mode: TranslationMode = settings.notesMode == .always ? .withNotes : .plain
+            let payload: Payload = contextHint.map {
+                .images([PayloadImage(data: prepared.data, mime: prepared.mimeType)], text: $0)
+            } ?? .image(prepared.data, mime: prepared.mimeType)
             let context = RunContext(
-                payload: .image(prepared.data, mime: prepared.mimeType),
+                payload: payload,
                 originalText: "",
                 detectedSourceLanguage: nil,
                 targetLanguage: settings.primaryTargetLanguage,
@@ -123,18 +128,21 @@ public final class TranslationSession: ObservableObject {
         }
     }
 
-    /// B6, этап 3: лист фрагментов (`RegionSheetRenderer`) одним запросом.
-    /// Результат — JSON в `translation` после завершения (`RegionTranslationParser`);
-    /// режим всегда `.plain`: пояснения к пунктам меню не нужны и ломают формат.
-    public func startRegionSheet(_ sheetData: Data) async {
+    /// B6: все листы фрагментов экрана (`RegionSheetRenderer`) одним запросом
+    /// плюс раскладка экрана текстом (`ScreenLayoutDescriber`). Результат — JSON в
+    /// `translation` после завершения (`RegionTranslationParser`); режим всегда
+    /// `.plain`: пояснения к пунктам меню не нужны и ломают формат.
+    public func startRegionBatch(sheets: [Data], context screenContext: String) async {
         guard let settings = LLMTranslateSettings(appGroupSuiteName: appGroupSuiteName) else {
             fail(.other(code: nil, message: "App Group не сконфигурирована"))
             return
         }
         do {
-            let prepared = try ImagePreparation.prepare(sourceData: sheetData)
+            let prepared = try sheets.map { try ImagePreparation.prepare(sourceData: $0) }
+            let total = prepared.reduce(0) { $0 + ImagePreparation.base64EncodedByteCount(for: $1.data.count) }
+            guard total <= ImagePreparation.maxPayloadBytes else { throw TranslationError.imageTooLarge }
             var context = RunContext(
-                payload: .image(prepared.data, mime: prepared.mimeType),
+                payload: .images(prepared.map { PayloadImage(data: $0.data, mime: $0.mimeType) }, text: screenContext),
                 originalText: "",
                 detectedSourceLanguage: nil,
                 targetLanguage: settings.primaryTargetLanguage,
@@ -364,11 +372,7 @@ public final class TranslationSession: ObservableObject {
         promptTokens: Int?,
         completionTokens: Int?
     ) {
-        let payloadSize: Int
-        switch context.payload {
-        case let .text(text): payloadSize = text.utf8.count
-        case let .image(data, _): payloadSize = data.count
-        }
+        let payloadSize = context.payload.byteCount
         let latencyMs = Int(Date().timeIntervalSince(start) * 1000)
         requestLog?.record(RequestLogEntry(
             slot: slotID,

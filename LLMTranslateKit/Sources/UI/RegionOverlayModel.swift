@@ -88,13 +88,23 @@ final class RegionOverlayModel: ObservableObject {
             log.notice("region cache: \(fromCache.count, privacy: .public) of \(regions.count, privacy: .public) from cache")
         }
 
+        // Фон под всеми надписями экрана — для раскладки («на цветной плашке»).
+        if regions.contains(where: { backgrounds[$0.id] == nil }) {
+            let sampled = await Task.detached(priority: .userInitiated) {
+                RegionOverlayPreparation.backgrounds(imageData: imageData, regions: regions)
+            }.value
+            guard myGeneration == generation else { return }
+            backgrounds.merge(sampled) { current, _ in current }
+        }
+
         // Модели иногда пропускают номер или отдают пустой перевод: областям,
-        // оставшимся без перевода, даём один повторный проход отдельным листом.
+        // оставшимся без перевода, даём один повторный проход — с тем же контекстом
+        // экрана и уже переведёнными надписями.
         var remaining = regions.filter { translations[$0.id] == nil && !fromCache.contains($0.id) }
         for round in 0..<2 {
             guard !remaining.isEmpty, myGeneration == generation else { break }
             let covered = await runRound(
-                regions: remaining, appGroupSuiteName: appGroupSuiteName, myGeneration: myGeneration
+                regions: remaining, screen: regions, appGroupSuiteName: appGroupSuiteName, myGeneration: myGeneration
             )
             guard myGeneration == generation, error == nil else { break }
             remaining = regions.filter { covered.contains($0.id) && translations[$0.id] == nil }
@@ -118,9 +128,15 @@ final class RegionOverlayModel: ObservableObject {
         isRunning = false
     }
 
-    /// Один проход: листы → параллельные запросы → разбор. Возвращает id
-    /// областей, которые попали в листы.
-    private func runRound(regions: [TextRegion], appGroupSuiteName: String, myGeneration: Int) async -> Set<Int> {
+    /// Один проход: все листы одним запросом вместе с раскладкой экрана и уже
+    /// известными переводами — модель видит надписи экрана вместе, а не по листу.
+    /// Возвращает id областей, которые попали в листы.
+    private func runRound(
+        regions: [TextRegion],
+        screen: [TextRegion],
+        appGroupSuiteName: String,
+        myGeneration: Int
+    ) async -> Set<Int> {
         let imageData = roundImageData
         let prepared = await Task.detached(priority: .userInitiated) {
             RegionOverlayPreparation.prepare(imageData: imageData, regions: regions)
@@ -128,27 +144,70 @@ final class RegionOverlayModel: ObservableObject {
         guard myGeneration == generation else { return [] }
         backgrounds.merge(prepared.backgrounds) { current, _ in current }
         let covered = Set(prepared.sheets.flatMap(\.regionIDs))
+        guard !covered.isEmpty else { return covered }
         pendingIDs.formUnion(covered)
 
-        let tasks = prepared.sheets.map { sheet in
-            Task { @MainActor in
-                let session = TranslationSession(appGroupSuiteName: appGroupSuiteName)
-                await session.startRegionSheet(sheet.data)
-                guard myGeneration == generation else { return }
-                if let failure = session.currentError {
-                    error = error ?? failure
-                } else {
-                    // Метка на листе — id + 1 (см. RegionSheetRenderer).
-                    let parsed = RegionTranslationParser.parse(session.translation)
-                    for id in sheet.regionIDs {
-                        if let text = parsed[id + 1] { translations[id] = text }
-                    }
-                }
-                pendingIDs.subtract(sheet.regionIDs)
+        let session = TranslationSession(appGroupSuiteName: appGroupSuiteName)
+        await session.startRegionBatch(
+            sheets: prepared.sheets.map(\.data),
+            context: screenContext(screen: screen, toTranslate: covered)
+        )
+        guard myGeneration == generation else { return covered }
+        if let failure = session.currentError {
+            error = error ?? failure
+        } else {
+            // Метка на листе — id + 1 (см. RegionSheetRenderer).
+            let parsed = RegionTranslationParser.parse(session.translation)
+            for id in covered {
+                if let text = parsed[id + 1] { translations[id] = text }
             }
         }
-        for task in tasks { await task.value }
+        pendingIDs.subtract(covered)
         return covered
+    }
+
+    /// Текст запроса: раскладка всего экрана, уже известные переводы (для
+    /// согласованности) и какие номера переводить сейчас.
+    func screenContext(screen: [TextRegion], toTranslate: Set<Int>) -> String {
+        let pageBackground = Self.pageBackground(of: screen.compactMap { backgrounds[$0.id] })
+        let items = screen.map { region in
+            ScreenLayoutDescriber.Item(
+                number: region.id + 1,
+                rect: region.rect,
+                lineHeight: region.lineHeight,
+                onColoredBackground: backgrounds[region.id].map { Self.distance($0, pageBackground) > 0.25 } ?? false
+            )
+        }
+        var text = "Надписи экрана сверху вниз (номер: где и что):\n" + ScreenLayoutDescriber.describe(items)
+        let known = screen
+            .filter { !toTranslate.contains($0.id) }
+            .compactMap { region in translations[region.id].map { "\(region.id + 1): «\($0)»" } }
+        if !known.isEmpty {
+            text += "\n\nУже переведены (не повторяй, держи те же термины):\n" + known.joined(separator: "\n")
+        }
+        let numbers = toTranslate.sorted().map { String($0 + 1) }.joined(separator: ", ")
+        text += "\n\nПереведи фрагменты на изображениях: " + numbers
+        return text
+    }
+
+    /// Подсказка для перевода одного фрагмента по тапу: раскладка экрана и уже
+    /// известные переводы соседних надписей (если «Весь экран» уже отработал).
+    func fragmentContext(regionID: Int, screen: [TextRegion]) -> String {
+        var text = "Изображение — фрагмент №\(regionID + 1) экрана приложения. Переведи только текст на изображении, "
+            + "используя остальное как контекст.\n\n"
+        text += screenContext(screen: screen, toTranslate: [regionID])
+            .replacingOccurrences(of: "\n\nПереведи фрагменты на изображениях: \(regionID + 1)", with: "")
+        return text
+    }
+
+    private static func pageBackground(of colors: [RegionBackground]) -> RegionBackground {
+        guard !colors.isEmpty else { return RegionBackground(red: 1, green: 1, blue: 1) }
+        func median(_ values: [Double]) -> Double { values.sorted()[values.count / 2] }
+        return RegionBackground(red: median(colors.map(\.red)), green: median(colors.map(\.green)), blue: median(colors.map(\.blue)))
+    }
+
+    private static func distance(_ a: RegionBackground, _ b: RegionBackground) -> Double {
+        ((a.red - b.red) * (a.red - b.red) + (a.green - b.green) * (a.green - b.green) + (a.blue - b.blue) * (a.blue - b.blue)).squareRoot()
     }
 
     /// «Повторить» после ошибки: те же области, новые запросы.
@@ -170,6 +229,11 @@ enum RegionOverlayPreparation {
         let backgrounds: [Int: RegionBackground]
     }
 
+
+    static func backgrounds(imageData: Data, regions: [TextRegion]) -> [Int: RegionBackground] {
+        guard let image = ScreenshotImageTools.normalizedCGImage(from: imageData) else { return [:] }
+        return RegionBackgroundSampler.sample(image: image, regions: regions)
+    }
 
     /// Отпечатки надписей по точной рамке области (без полей: поля тянут соседей,
     /// и одна и та же кнопка в другом окружении получила бы другой отпечаток).

@@ -4,6 +4,30 @@ import Foundation
 public enum Payload: Sendable, Equatable {
     case text(String)
     case image(Data, mime: String)
+    /// Несколько изображений одним сообщением плюс текст к ним — для перевода
+    /// всех фрагментов экрана одним запросом с раскладкой экрана в тексте.
+    case images([PayloadImage], text: String)
+}
+
+public struct PayloadImage: Sendable, Equatable {
+    public let data: Data
+    public let mime: String
+
+    public init(data: Data, mime: String) {
+        self.data = data
+        self.mime = mime
+    }
+}
+
+extension Payload {
+    /// Размер полезной нагрузки в байтах (для журнала запросов).
+    public var byteCount: Int {
+        switch self {
+        case let .text(text): text.utf8.count
+        case let .image(data, _): data.count
+        case let .images(images, text): images.reduce(text.utf8.count) { $0 + $1.data.count }
+        }
+    }
 }
 
 public struct TranslationRequest: Sendable {

@@ -30,6 +30,7 @@ public struct ScreenshotRegionsView: View {
     private struct SelectedFragment: Identifiable {
         let id: Int
         let imageData: Data
+        let contextHint: String?
     }
 
     /// Непрозрачность фона плашки: оригинал под ней должен просвечивать
@@ -68,7 +69,7 @@ public struct ScreenshotRegionsView: View {
         }
         .sheet(item: $selected) { fragment in
             NavigationStack {
-                ImageTranslationView(originalImageData: fragment.imageData, appGroupSuiteName: appGroupSuiteName)
+                ImageTranslationView(originalImageData: fragment.imageData, appGroupSuiteName: appGroupSuiteName, contextHint: fragment.contextHint)
                     .navigationTitle(Text("Перевод", bundle: .kit))
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
@@ -273,7 +274,12 @@ public struct ScreenshotRegionsView: View {
             let crop = await Task.detached(priority: .userInitiated) {
                 ScreenshotImageTools.cropData(from: data, region: region)
             }.value
-            if let crop { selected = SelectedFragment(id: region.id, imageData: crop) }
+            // Контекст экрана: где этот фрагмент и как уже переведены соседние надписи.
+            let hint: String? = {
+                guard case let .ready(regions) = phase, regions.count > 1 else { return nil }
+                return overlay.fragmentContext(regionID: region.id, screen: regions)
+            }()
+            if let crop { selected = SelectedFragment(id: region.id, imageData: crop, contextHint: hint) }
         }
     }
 

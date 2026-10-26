@@ -16,6 +16,10 @@ public enum GeminiRequestBodyBuilder {
                 ["inline_data": ["mime_type": mime, "data": base64]],
                 ["text": ""],
             ]
+        case let .images(images, text):
+            parts = images.map { image in
+                ["inline_data": ["mime_type": image.mime, "data": image.data.base64EncodedString()]] as [String: Any]
+            } + [["text": text]]
         }
 
         var generationConfig: [String: Any] = ["maxOutputTokens": request.maxOutputTokens]

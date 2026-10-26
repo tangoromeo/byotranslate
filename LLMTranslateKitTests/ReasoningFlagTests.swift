@@ -77,3 +77,45 @@ final class TemperatureTests: XCTestCase {
         XCTAssertEqual(OpenAIRequestBodyBuilder.body(for: request(0), model: "gpt-4.1-mini", baseURL: openAI)["temperature"] as? Double, 0)
     }
 }
+
+/// Несколько изображений одним запросом (все листы фрагментов экрана сразу).
+final class MultiImagePayloadTests: XCTestCase {
+    private let request = TranslationRequest(
+        payload: .images([PayloadImage(data: Data([1, 2]), mime: "image/png"), PayloadImage(data: Data([3]), mime: "image/jpeg")],
+                         text: "раскладка"),
+        detectedSourceLanguage: nil, targetLanguage: Locale.Language(identifier: "ru"), systemPrompt: "s"
+    )
+
+    private func userContent(_ body: [String: Any]) -> [[String: Any]] {
+        let messages = body["messages"] as! [[String: Any]]
+        return messages.last!["content"] as! [[String: Any]]
+    }
+
+    func test_openAI_textThenAllImages_inOrder() {
+        let content = userContent(OpenAIRequestBodyBuilder.body(for: request, model: "m"))
+        XCTAssertEqual(content.count, 3)
+        XCTAssertEqual(content[0]["text"] as? String, "раскладка")
+        XCTAssertEqual((content[1]["image_url"] as? [String: String])?["url"], "data:image/png;base64,AQI=")
+        XCTAssertEqual((content[2]["image_url"] as? [String: String])?["url"], "data:image/jpeg;base64,Aw==")
+    }
+
+    func test_anthropic_imagesThenText() {
+        let content = userContent(AnthropicRequestBodyBuilder.body(for: request, model: "m"))
+        XCTAssertEqual(content.map { $0["type"] as? String }, ["image", "image", "text"])
+        XCTAssertEqual(((content[1]["source"] as? [String: String])?["media_type"]), "image/jpeg")
+        XCTAssertEqual(content[2]["text"] as? String, "раскладка")
+    }
+
+    func test_gemini_inlineDataThenText() {
+        let contents = GeminiRequestBodyBuilder.body(for: request)["contents"] as! [[String: Any]]
+        let parts = contents[0]["parts"] as! [[String: Any]]
+        XCTAssertEqual(parts.count, 3)
+        XCTAssertNotNil(parts[0]["inline_data"])
+        XCTAssertNotNil(parts[1]["inline_data"])
+        XCTAssertEqual(parts[2]["text"] as? String, "раскладка")
+    }
+
+    func test_byteCount_sumsImagesAndText() {
+        XCTAssertEqual(request.payload.byteCount, 3 + "раскладка".utf8.count)
+    }
+}

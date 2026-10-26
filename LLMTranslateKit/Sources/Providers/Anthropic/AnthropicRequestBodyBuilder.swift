@@ -17,6 +17,10 @@ public enum AnthropicRequestBodyBuilder {
                 ["type": "image", "source": ["type": "base64", "media_type": mime, "data": base64]],
                 ["type": "text", "text": ""],
             ] as [Any]
+        case let .images(images, text):
+            userContent = images.map { image in
+                ["type": "image", "source": ["type": "base64", "media_type": image.mime, "data": image.data.base64EncodedString()]]
+            } + [["type": "text", "text": text]] as [Any]
         }
 
         var body: [String: Any] = [

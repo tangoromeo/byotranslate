@@ -23,7 +23,11 @@ public struct ImageTranslationView: View {
         session.lastTargetLanguage.map(TextDirectionResolver.isRightToLeft) ?? false
     }
 
-    public init(originalImageData: Data, appGroupSuiteName: String) {
+    /// Текст к изображению для модели (контекст фрагмента экрана), `nil` — без него.
+    private let contextHint: String?
+
+    public init(originalImageData: Data, appGroupSuiteName: String, contextHint: String? = nil) {
+        self.contextHint = contextHint
         self.originalImageData = originalImageData
         _session = StateObject(wrappedValue: TranslationSession(appGroupSuiteName: appGroupSuiteName))
     }
@@ -74,7 +78,7 @@ public struct ImageTranslationView: View {
         // originalImageData напрямую) показывает новую картинку, а
         // session.translation остаётся от предыдущей — задача не
         // перезапускается сама по себе.
-        .task(id: originalImageData) { await session.startImage(originalImageData) }
+        .task(id: originalImageData) { await session.startImage(originalImageData, contextHint: contextHint) }
     }
 
     /// Раздел 11 ТЗ: «Полный текст ошибки провайдера — в раскрывающейся

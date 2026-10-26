@@ -43,6 +43,7 @@
 		4BD0E72F0BAB9D0DE026BE1A /* LanguagePairResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF9DA30F53E6FB78973256D8 /* LanguagePairResolverTests.swift */; };
 		4CBDDF596233340258CD955A /* ImagePreparationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C2EFC3A76BE96DF729832FC /* ImagePreparationTests.swift */; };
 		4CFCB8E06D5FE1383DBD640B /* TranslationCacheKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3FDEE09FA24DB5261F2174 /* TranslationCacheKeyTests.swift */; };
+		4E3C59C8CA0790B6F9C24276 /* ScreenLayoutDescriberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150357E21446B5C92351867A /* ScreenLayoutDescriberTests.swift */; };
 		50C851F7AD8C1D53A5DF7020 /* ScreenshotFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D7A70FA9FB13D00DEB1053 /* ScreenshotFetcher.swift */; };
 		53C795A8EA303DE93EC4E337 /* ScreenshotRegionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5970F1EFE77148CA68B8D875 /* ScreenshotRegionsView.swift */; };
 		55CCFF5F2608C517D986A2EF /* GlossaryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6922F85B8A483A457C63E843 /* GlossaryEditorView.swift */; };
@@ -118,6 +119,7 @@
 		E2A83791F886FE01601A3AD4 /* LanguagesAndPromptsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B89AF025064C2CA80641500 /* LanguagesAndPromptsView.swift */; };
 		E6685F9F9F335C65C20AD28F /* LLMTranslateSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4768ACEBC356362820BD6700 /* LLMTranslateSettings.swift */; };
 		ED47C30E991AFAF3AC552D2A /* AnthropicStreamParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9671D6F4E22E04107094DC9 /* AnthropicStreamParsingTests.swift */; };
+		EDD3BAB129673557BD8EE393 /* ScreenLayoutDescriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D88A074D0B004A66F697E4 /* ScreenLayoutDescriber.swift */; };
 		EE1E1D701CFAEF0A63DABC8E /* TranslationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE2F6E4EE7ADAEB18639550 /* TranslationMode.swift */; };
 		EE6BFF6E9A180CDF09C99A4E /* ErrorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C79511DE472363A31667EE /* ErrorMappingTests.swift */; };
 		F5F9F781BBFB504DFD55CDF9 /* RegionSheetPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9C1DE05D3905689BF3F4DC /* RegionSheetPlanner.swift */; };
@@ -246,6 +248,7 @@
 		0CACC3565FCF5F71EC7850D2 /* ModelPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPickerView.swift; sourceTree = "<group>"; };
 		0D3FDEE09FA24DB5261F2174 /* TranslationCacheKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationCacheKeyTests.swift; sourceTree = "<group>"; };
 		117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationProvider.swift; sourceTree = "<group>"; };
+		150357E21446B5C92351867A /* ScreenLayoutDescriberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenLayoutDescriberTests.swift; sourceTree = "<group>"; };
 		19D3700C64814E928590FC53 /* TextRegionGrouper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRegionGrouper.swift; sourceTree = "<group>"; };
 		1ADF0BC373BB776BDF5A6836 /* TextRegionGrouperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRegionGrouperTests.swift; sourceTree = "<group>"; };
 		1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLanguageDetector.swift; sourceTree = "<group>"; };
@@ -275,6 +278,7 @@
 		5331BF8BE9942A161FEE4B3D /* LLMTranslateTextExt.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = LLMTranslateTextExt.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		584859A6C18224CACDE75296 /* AnthropicProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicProvider.swift; sourceTree = "<group>"; };
 		5970F1EFE77148CA68B8D875 /* ScreenshotRegionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotRegionsView.swift; sourceTree = "<group>"; };
+		59D88A074D0B004A66F697E4 /* ScreenLayoutDescriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenLayoutDescriber.swift; sourceTree = "<group>"; };
 		5A1BC11941D69FE6510B1FBF /* ConnectionProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionProfile.swift; sourceTree = "<group>"; };
 		5AB98F5A2C569E61113B1042 /* ModelsHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsHomeView.swift; sourceTree = "<group>"; };
 		5B89AF025064C2CA80641500 /* LanguagesAndPromptsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagesAndPromptsView.swift; sourceTree = "<group>"; };
@@ -540,6 +544,7 @@
 				71C0F658E68ECB1C3BE0A087 /* RegionBatchTests.swift */,
 				07A07F0B6E6118301069C970 /* RequestLogTests.swift */,
 				D0BD8AFF3F8ACE381B522738 /* ResponseSanitizerTests.swift */,
+				150357E21446B5C92351867A /* ScreenLayoutDescriberTests.swift */,
 				8388E550FF2FEB1B844C685D /* StatusBarFilterTests.swift */,
 				F1CFE5374D21625FF48029E7 /* TextDirectionResolverTests.swift */,
 				1ADF0BC373BB776BDF5A6836 /* TextRegionGrouperTests.swift */,
@@ -673,6 +678,7 @@
 				877C092A85DBC34DDB52F790 /* ImageResizeMath.swift */,
 				6C7E7805D0B2F5A0FC7C67AE /* PlaqueLayout.swift */,
 				DD9C1DE05D3905689BF3F4DC /* RegionSheetPlanner.swift */,
+				59D88A074D0B004A66F697E4 /* ScreenLayoutDescriber.swift */,
 				9F27C80321199B95518710AD /* StatusBarFilter.swift */,
 				5E3DC73C1ED1F53BCE3D6EE0 /* TextRegionDetector.swift */,
 				19D3700C64814E928590FC53 /* TextRegionGrouper.swift */,
@@ -1090,6 +1096,7 @@
 				288F7BE65BD18229448F56A3 /* ResponseSanitizer.swift in Sources */,
 				D2C44A516CDCF8070EC4D6B1 /* SSELineAssembler.swift in Sources */,
 				94DD5D0B201AA6528283899A /* SSEStreamRunner.swift in Sources */,
+				EDD3BAB129673557BD8EE393 /* ScreenLayoutDescriber.swift in Sources */,
 				50C851F7AD8C1D53A5DF7020 /* ScreenshotFetcher.swift in Sources */,
 				53C795A8EA303DE93EC4E337 /* ScreenshotRegionsView.swift in Sources */,
 				933350A71F8C9ABF5A012940 /* SharedIdentifiers.swift in Sources */,
@@ -1181,6 +1188,7 @@
 				A92365EEC1D08368AA112995 /* RegionBatchTests.swift in Sources */,
 				FA90755006EF1F8BB6EE4D15 /* RequestLogTests.swift in Sources */,
 				2BD67B44B952D1EDFD8D338D /* ResponseSanitizerTests.swift in Sources */,
+				4E3C59C8CA0790B6F9C24276 /* ScreenLayoutDescriberTests.swift in Sources */,
 				C1BA8C13A06B7837EEB506F5 /* StatusBarFilterTests.swift in Sources */,
 				A45E2B47E2DF900263A5084B /* TextDirectionResolverTests.swift in Sources */,
 				871BDF7A967018FCE9119138 /* TextRegionGrouperTests.swift in Sources */,
