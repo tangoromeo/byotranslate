@@ -13,6 +13,7 @@
 		08DD7E5B6C4935A05F2A393D /* ConnectionProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B1C0AD30D27941EF4F1BF5E /* ConnectionProfileTests.swift */; };
 		08E0BB1A1EF3792827DCFEB4 /* OpenAIModelListParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C530367D8D8BBA93269453 /* OpenAIModelListParsing.swift */; };
 		0B79EFB61F835223F9886A18 /* LLMTranslateKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9539654B8CE780535DC0ADE7 /* LLMTranslateKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1016B7A2D14328B372975060 /* PlaqueLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BCE57A091E9371DF97A5D8 /* PlaqueLayoutTests.swift */; };
 		10D4475146F6C7F4723F75AC /* ModelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CACC3565FCF5F71EC7850D2 /* ModelPickerView.swift */; };
 		118A4285BFEC6A08EC662589 /* TranslationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC73BEDF0D7C23FAD93AA3D7 /* TranslationRequest.swift */; };
 		14D01A17F830D84AE0205DD9 /* OpenAIRequestBodyBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CBE023F4FA32F68870C89E0 /* OpenAIRequestBodyBuilder.swift */; };
@@ -75,6 +76,7 @@
 		9487ABB06B88097185B852C9 /* LocalLanguageDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BF83BD70DBF8B99ABF22C34 /* LocalLanguageDetector.swift */; };
 		949BDCA74E722C6FA5E1CC66 /* LLMTranslateControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84216DA4F2DF754088771E5E /* LLMTranslateControl.swift */; };
 		94DD5D0B201AA6528283899A /* SSEStreamRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF1CF118A639582B9FCBDCC /* SSEStreamRunner.swift */; };
+		965F4C442BD32C4CC7F89E5E /* PlaqueLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7E7805D0B2F5A0FC7C67AE /* PlaqueLayout.swift */; };
 		970D4B2816A286AA488D7B1E /* LLMTranslateShareExt.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8CF593D8FD9F4C4D7CFC34C0 /* LLMTranslateShareExt.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		990CF404D07B73F1D2723996 /* StreamEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A976C4CD7DA8EAAA29615084 /* StreamEvent.swift */; };
 		9CD50CE38A6B82E6A02B4321 /* TranslationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117FB7B54A62B7DC1DADA66E /* TranslationProvider.swift */; };
@@ -276,6 +278,7 @@
 		5F3E4E4AB469A92B34B005ED /* ModelDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDescriptor.swift; sourceTree = "<group>"; };
 		5F7775BCB07E93BB638EB9E9 /* TranslateInPlaceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateInPlaceIntent.swift; sourceTree = "<group>"; };
 		6922F85B8A483A457C63E843 /* GlossaryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlossaryEditorView.swift; sourceTree = "<group>"; };
+		6C7E7805D0B2F5A0FC7C67AE /* PlaqueLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaqueLayout.swift; sourceTree = "<group>"; };
 		70B00DA699B883AA762E042C /* SlotID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotID.swift; sourceTree = "<group>"; };
 		71C0F658E68ECB1C3BE0A087 /* RegionBatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegionBatchTests.swift; sourceTree = "<group>"; };
 		77FB6A9BB531EBDFAC84F71B /* GeminiSSELineParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSSELineParser.swift; sourceTree = "<group>"; };
@@ -330,6 +333,7 @@
 		E16291B2F2CF753F28AC6943 /* ConnectionWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionWizardView.swift; sourceTree = "<group>"; };
 		E2EC2F08C8B4833BF7A4A209 /* AnthropicSSELineParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicSSELineParser.swift; sourceTree = "<group>"; };
 		E4D6E1492091E44C8937E929 /* OpenAISSEParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAISSEParsingTests.swift; sourceTree = "<group>"; };
+		E7BCE57A091E9371DF97A5D8 /* PlaqueLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaqueLayoutTests.swift; sourceTree = "<group>"; };
 		E7C79511DE472363A31667EE /* ErrorMappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMappingTests.swift; sourceTree = "<group>"; };
 		E87BBE06B02562173AA6088C /* GlossaryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlossaryEntry.swift; sourceTree = "<group>"; };
 		EB852319875552E440DA2735 /* InPlaceTranslation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InPlaceTranslation.swift; sourceTree = "<group>"; };
@@ -519,6 +523,7 @@
 				7D8BE457F963CF4E40F2055C /* OpenAIRequestBodyBuilderTests.swift */,
 				E4D6E1492091E44C8937E929 /* OpenAISSEParsingTests.swift */,
 				C30943A0C5D05C211E883ABD /* PendingImageTranslationTests.swift */,
+				E7BCE57A091E9371DF97A5D8 /* PlaqueLayoutTests.swift */,
 				8A68F0DCDEC5B70ACF295E68 /* ReasoningFlagTests.swift */,
 				71C0F658E68ECB1C3BE0A087 /* RegionBatchTests.swift */,
 				07A07F0B6E6118301069C970 /* RequestLogTests.swift */,
@@ -652,6 +657,7 @@
 				458A7C22F5C95005659B35F9 /* ImageDownsampler.swift */,
 				4572E1FCF82BA512D1A2B3EA /* ImagePreparation.swift */,
 				877C092A85DBC34DDB52F790 /* ImageResizeMath.swift */,
+				6C7E7805D0B2F5A0FC7C67AE /* PlaqueLayout.swift */,
 				DD9C1DE05D3905689BF3F4DC /* RegionSheetPlanner.swift */,
 				5E3DC73C1ED1F53BCE3D6EE0 /* TextRegionDetector.swift */,
 				19D3700C64814E928590FC53 /* TextRegionGrouper.swift */,
@@ -1055,6 +1061,7 @@
 				14D01A17F830D84AE0205DD9 /* OpenAIRequestBodyBuilder.swift in Sources */,
 				FC97C3ADBF5112A5A31AB953 /* OpenAIStreamEvent.swift in Sources */,
 				B91236C31B851852F83D65E6 /* PendingImageTranslation.swift in Sources */,
+				965F4C442BD32C4CC7F89E5E /* PlaqueLayout.swift in Sources */,
 				82FD0E03442029150E4B4278 /* ProfileMigration.swift in Sources */,
 				9376B93D534B1180134E3F78 /* PromptBuilder.swift in Sources */,
 				794D31B51EEBFFCC4C595BE3 /* ProviderFactory.swift in Sources */,
@@ -1150,6 +1157,7 @@
 				60944E4652A2157B6C2E31A1 /* OpenAIRequestBodyBuilderTests.swift in Sources */,
 				4A7664DBF8A25FCCB582BA0A /* OpenAISSEParsingTests.swift in Sources */,
 				939AF423AC86680D35F28CF5 /* PendingImageTranslationTests.swift in Sources */,
+				1016B7A2D14328B372975060 /* PlaqueLayoutTests.swift in Sources */,
 				63F34EA981DBA3CA220D4E37 /* ReasoningFlagTests.swift in Sources */,
 				A92365EEC1D08368AA112995 /* RegionBatchTests.swift in Sources */,
 				FA90755006EF1F8BB6EE4D15 /* RequestLogTests.swift in Sources */,

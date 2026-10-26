@@ -55,9 +55,11 @@ public enum InPlaceTranslation {
     }
 }
 
-/// Рисует плашки прямо в пиксели снимка (тот же вид, что SwiftUI-плашки на
-/// экране «Весь экран»): фон в тон краёв рамки, ореол у текста, сдвиг вниз,
-/// шрифт от высоты строки, длинный перевод ужимается до половины.
+/// Рисует перевод прямо в пиксели снимка, как переводчик Google: без
+/// прямоугольника-плашки — исходный текст затирается цветом фона под ним (у
+/// красной кнопки — красным), поверх пишется перевод. Форма кнопок, рамки и фон
+/// остаются оригинальными. Каждый перевод занимает только своё свободное место
+/// (`PlaqueLayout`), поэтому соседние подписи не наезжают друг на друга.
 enum PlaqueRenderer {
     static func render(
         imageData: Data,
@@ -68,75 +70,99 @@ enum PlaqueRenderer {
     ) -> Data? {
         guard let cgImage = ScreenshotImageTools.normalizedCGImage(from: imageData) else { return nil }
         let size = CGSize(width: cgImage.width, height: cgImage.height)
+        let translated = regions.filter { translations[$0.id] != nil }
+        let pixelRects = translated.map { pixelRect($0, in: size) }
+
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = true
         let image = UIGraphicsImageRenderer(size: size, format: format).image { context in
             UIImage(cgImage: cgImage).draw(in: CGRect(origin: .zero, size: size))
-            for region in regions {
+            // Сначала затираем все исходные надписи, потом пишем переводы:
+            // иначе затирка следующей подписи могла бы съесть уже написанный текст.
+            for (region, rect) in zip(translated, pixelRects) {
+                let lineHeight = max(region.lineHeight * size.height, 1)
+                color(backgrounds[region.id]).setFill()
+                UIBezierPath(
+                    roundedRect: rect.insetBy(dx: -lineHeight * 0.12, dy: -lineHeight * 0.1),
+                    cornerRadius: lineHeight * 0.15
+                ).fill()
+            }
+            let bounds = CGRect(origin: .zero, size: size).insetBy(dx: size.width * 0.02, dy: 0)
+            for (index, region) in translated.enumerated() {
                 guard let text = translations[region.id] else { continue }
-                drawPlaque(
-                    text: text, region: region, imageSize: size,
-                    background: backgrounds[region.id], rightToLeft: rightToLeft, context: context.cgContext
+                let space = PlaqueLayout.freeSpace(for: index, in: pixelRects, bounds: bounds, gap: size.width * 0.01)
+                drawText(
+                    text, source: pixelRects[index], space: space, lineHeight: max(region.lineHeight * size.height, 1),
+                    imageWidth: size.width, background: backgrounds[region.id], rightToLeft: rightToLeft,
+                    context: context.cgContext
                 )
             }
         }
         return image.jpegData(compressionQuality: 0.85)
     }
 
-    private static func drawPlaque(
-        text: String,
-        region: TextRegion,
-        imageSize: CGSize,
+    private static func pixelRect(_ region: TextRegion, in size: CGSize) -> CGRect {
+        CGRect(
+            x: region.rect.minX * size.width,
+            y: region.rect.minY * size.height,
+            width: region.rect.width * size.width,
+            height: region.rect.height * size.height
+        )
+    }
+
+    private static func color(_ background: RegionBackground?) -> UIColor {
+        background.map { UIColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .white
+    }
+
+    private static func drawText(
+        _ text: String,
+        source: CGRect,
+        space: CGRect,
+        lineHeight: CGFloat,
+        imageWidth: CGFloat,
         background: RegionBackground?,
         rightToLeft: Bool,
         context: CGContext
     ) {
-        let lineHeight = max(region.lineHeight * imageSize.height, 1)
-        var rect = CGRect(
-            x: region.rect.minX * imageSize.width,
-            y: region.rect.minY * imageSize.height,
-            width: region.rect.width * imageSize.width,
-            height: region.rect.height * imageSize.height
-        ).insetBy(dx: -lineHeight * 0.15, dy: -lineHeight * 0.08)
-        rect.origin.y = min(rect.minY + lineHeight * PlaqueStyle.shift, imageSize.height - rect.height)
-
-        let backgroundColor = background.map { UIColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .white
+        let backgroundColor = color(background)
         let luminance = background.map { 0.2126 * $0.red + 0.7152 * $0.green + 0.0722 * $0.blue } ?? 1
         let textColor: UIColor = luminance > 0.55 ? .black : .white
 
-        backgroundColor.withAlphaComponent(PlaqueStyle.opacity).setFill()
-        UIBezierPath(roundedRect: rect, cornerRadius: lineHeight * 0.15).fill()
-
-        let inner = rect.insetBy(dx: lineHeight * 0.12, dy: 0)
         let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = rightToLeft ? .right : .left
+        paragraph.alignment = .center
+        paragraph.baseWritingDirection = rightToLeft ? .rightToLeft : .leftToRight
         paragraph.lineBreakMode = .byWordWrapping
         func attributes(_ fontSize: CGFloat) -> [NSAttributedString.Key: Any] {
             [.font: UIFont.systemFont(ofSize: fontSize, weight: .medium), .foregroundColor: textColor, .paragraphStyle: paragraph]
         }
-        func height(_ fontSize: CGFloat) -> CGFloat {
-            (text as NSString).boundingRect(
-                with: CGSize(width: inner.width, height: .greatestFiniteMagnitude),
+        func measure(_ fontSize: CGFloat, width: CGFloat) -> CGSize {
+            let bounds = (text as NSString).boundingRect(
+                with: CGSize(width: width, height: .greatestFiniteMagnitude),
                 options: [.usesLineFragmentOrigin], attributes: attributes(fontSize), context: nil
-            ).height
-        }
-        let fullSize = max(8, lineHeight * 0.78)
-        var fontSize = fullSize
-        while fontSize > fullSize * 0.5, height(fontSize) > inner.height {
-            fontSize *= 0.92
-        }
-        let textHeight = min(height(fontSize), inner.height)
-        let drawRect = CGRect(x: inner.minX, y: inner.midY - textHeight / 2, width: inner.width, height: textHeight)
-
-        // Ореол цвета фона отделяет перевод от просвечивающего оригинала.
-        context.saveGState()
-        context.setShadow(offset: .zero, blur: max(2, fontSize * 0.15), color: backgroundColor.withAlphaComponent(0.95).cgColor)
-        for _ in 0..<2 {
-            (text as NSString).draw(
-                with: drawRect, options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
-                attributes: attributes(fontSize), context: nil
             )
+            return CGSize(width: ceil(bounds.width), height: ceil(bounds.height))
+        }
+
+        // Шрифт — от высоты строки оригинала, но не мельче читаемого минимума
+        // (снимок в «Быстром просмотре» показывается примерно в треть размера).
+        let minimumFont = imageWidth * 0.028
+        var fontSize = max(lineHeight * 0.8, minimumFont)
+        // Сначала в одну строку в пределах свободного места, потом перенос,
+        // потом уменьшение шрифта — пока не влезет по высоте (и не ниже 85% минимума).
+        var size = measure(fontSize, width: space.width)
+        while size.height > space.height, fontSize > minimumFont * 0.85 {
+            fontSize *= 0.92
+            size = measure(fontSize, width: space.width)
+        }
+        let frame = PlaqueLayout.place(size, near: CGPoint(x: source.midX, y: source.midY), in: space)
+
+        // Ореол цвета фона: перевод, вышедший за затёртую область, читается и
+        // поверх соседнего фона.
+        context.saveGState()
+        context.setShadow(offset: .zero, blur: max(2, fontSize * 0.18), color: backgroundColor.cgColor)
+        for _ in 0..<2 {
+            (text as NSString).draw(with: frame, options: [.usesLineFragmentOrigin], attributes: attributes(fontSize), context: nil)
         }
         context.restoreGState()
     }
