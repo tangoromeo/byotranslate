@@ -293,6 +293,8 @@ struct SlotSettingsView: View {
         .id(refreshTick)
         .navigationTitle(title)
         .onAppear(perform: load)
+        // Правки в форме не теряются при выходе с экрана без «Сохранить».
+        .onDisappear(perform: save)
         .sheet(isPresented: $isShowingWizard, onDismiss: { refreshTick += 1; load() }) {
             ConnectionWizardView(settings: settings)
         }
@@ -309,6 +311,9 @@ struct SlotSettingsView: View {
                 // Рейтинг знает, каким моделям размышление мешает с нашим лимитом ответа.
                 disableReasoning = isOpenRouterSelected
                     && ModelRatings.rating(for: descriptor.rawID)?.disableReasoningRecommended == true
+                // Выбор в списке применяется сразу: раньше он попадал в настройки
+                // только после «Сохранить», и при выходе с экрана молча терялся.
+                save()
                 isShowingModelPicker = false
             }
         }

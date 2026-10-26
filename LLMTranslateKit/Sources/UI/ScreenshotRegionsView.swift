@@ -34,10 +34,10 @@ public struct ScreenshotRegionsView: View {
 
     /// Непрозрачность фона плашки: оригинал под ней должен просвечивать
     /// (можно сверить место на экране), но не мешать читать перевод.
-    private static let plaqueOpacity = 0.62
+    private static let plaqueOpacity = PlaqueStyle.opacity
     /// Сдвиг плашки вниз относительно оригинала, в высотах строки: верх
     /// исходной надписи остаётся видимым, и обе читаются.
-    private static let plaqueShift: CGFloat = 0.35
+    private static let plaqueShift = PlaqueStyle.shift
 
     @State private var phase: Phase = .detecting
     @State private var displayImage: UIImage?

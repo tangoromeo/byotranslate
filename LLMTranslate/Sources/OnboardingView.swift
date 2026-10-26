@@ -1,4 +1,5 @@
 import SwiftUI
+import LLMTranslateKit
 import UIKit
 
 /// Раздел 13, экран 1 ТЗ v1.2: что делает приложение, как назначить его
@@ -11,6 +12,13 @@ import UIKit
 /// шаги, проверенные вживую на iOS 18.4: `Настройки → Приложения →
 /// Приложения по умолчанию → Перевод`.
 struct OnboardingView: View {
+    @State private var opensApp = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp ?? false
+
+    /// Готовая команда «Сделать снимок экрана» → «Перевести на месте» → «Быстрый
+    /// просмотр», опубликованная ссылкой iCloud: приложение не может поставить
+    /// цепочку из чужих действий само, а ссылка добавляет её в одно касание.
+    static let translateScreenShortcutURL = URL(string: "https://www.icloud.com/shortcuts/726c2d0ecc3d408290d64c27c914a50e")!
+
     var body: some View {
         Form {
             Section("Что это такое") {
@@ -34,6 +42,36 @@ struct OnboardingView: View {
                 }
             } header: {
                 Text("Как назначить стандартным переводчиком")
+            }
+
+            Section {
+                Text("Одно нажатие на любом экране: снимок экрана переводится плашками поверх оригинала и показывается поверх текущего приложения. Закрыли просмотр — вы там же, где были; BYO Translate не открывается.")
+                Button("Добавить команду «Перевести экран»") {
+                    UIApplication.shared.open(Self.translateScreenShortcutURL)
+                }
+                Picker("Где показывать перевод", selection: $opensApp) {
+                    Text("Поверх текущего приложения").tag(false)
+                    Text("В BYO Translate").tag(true)
+                }
+                .onChange(of: opensApp) { _, newValue in
+                    LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp = newValue
+                }
+                Text(opensApp
+                     ? "Открывается BYO Translate: фрагменты по касанию, «Точнее», «Пояснить». Вернуться в прежнее приложение придётся самому."
+                     : "Весь экран плашками поверх текущего приложения; закрыли — вы там же, где были.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Затем повесьте её на удобную кнопку:")
+                    Text("• Кнопка «Действие»: Настройки → Кнопка действия → Команда → «Перевести экран».")
+                    Text("• Кнопка на экране: Настройки → Универсальный доступ → Касание → AssistiveTouch → Одно касание → «Перевести экран».")
+                    Text("• Касание задней панели: Настройки → Универсальный доступ → Касание → Касание задней панели → Двойное касание → «Перевести экран».")
+                }
+                .font(.callout)
+            } header: {
+                Text("Перевод на любом экране (рекомендуется)")
+            } footer: {
+                Text("Команда: «Сделать снимок экрана» → «Режим перевода экрана» → если «Да», «Перевести изображение» (открывает приложение), иначе «Перевести на месте» → «Быстрый просмотр». Снимок не сохраняется в «Фото».")
             }
 
             Section {

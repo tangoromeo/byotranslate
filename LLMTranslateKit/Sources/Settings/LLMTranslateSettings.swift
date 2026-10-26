@@ -40,6 +40,7 @@ public final class LLMTranslateSettings: @unchecked Sendable {
         static let customImagePrompt = "customImagePrompt"
         static let customNotesAddendum = "customNotesAddendum"
         static let showOriginalTextInSheet = "showOriginalTextInSheet"
+        static let screenTranslationOpensApp = "screenTranslationOpensApp"
         static let cacheEnabled = "cacheEnabled"
         static let glossaryEntries = "glossaryEntries"
         static let textFirstByteTimeout = "textFirstByteTimeout"
@@ -156,6 +157,15 @@ public final class LLMTranslateSettings: @unchecked Sendable {
     public var showOriginalTextInSheet: Bool {
         get { defaults.object(forKey: Key.showOriginalTextInSheet) as? Bool ?? false }
         set { defaults.set(newValue, forKey: Key.showOriginalTextInSheet) }
+    }
+
+    /// Команда «Перевести экран»: `false` — перевод плашками поверх текущего
+    /// приложения («на месте», возврат сохраняется); `true` — открыть BYO Translate
+    /// с выбором фрагментов, «Точнее», «Пояснить». Читается действием
+    /// «Режим перевода экрана», по нему ветвится команда.
+    public var screenTranslationOpensApp: Bool {
+        get { defaults.bool(forKey: Key.screenTranslationOpensApp) }
+        set { defaults.set(newValue, forKey: Key.screenTranslationOpensApp) }
     }
 
     /// Раздел 11.4 ТЗ v1.2: «По умолчанию выключен» — осознанный размен
