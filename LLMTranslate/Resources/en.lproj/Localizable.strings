@@ -166,3 +166,5 @@
 "Весь экран плашками поверх текущего приложения; закрыли — вы там же, где были." = "The whole screen with labels over the current app; close it and you are where you were.";
 "Команда: «Сделать снимок экрана» → «Режим перевода экрана» → если «Да», «Перевести изображение» (открывает приложение), иначе «Перевести на месте» → «Быстрый просмотр». Снимок не сохраняется в «Фото»." = "The shortcut: “Take Screenshot” → “Screen Translation Mode” → if “Yes”, “Translate Image” (opens the app), otherwise “Translate in Place” → “Quick Look”. The screenshot is not saved to Photos.";
 "Режим перевода экрана" = "Screen Translation Mode";
+"Перевод экрана" = "Screen translation";
+"Работает через команду «Перевести экран» на кнопке «Действие», AssistiveTouch или касании задней панели — подробнее в «Как начать»." = "Works through the “Translate Screen” shortcut on the Action button, AssistiveTouch or Back Tap — see “Getting started”.";

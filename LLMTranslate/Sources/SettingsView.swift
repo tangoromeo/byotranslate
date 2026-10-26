@@ -22,6 +22,17 @@ struct SettingsView: View {
                 NavigationLink("Отладка и расход") {
                     DebugAndUsageView(settings: settings)
                 }
+
+                Section {
+                    ScreenTranslationModePicker()
+                    Button("Добавить команду «Перевести экран»") {
+                        UIApplication.shared.open(OnboardingView.translateScreenShortcutURL)
+                    }
+                } header: {
+                    Text("Перевод экрана")
+                } footer: {
+                    Text("Работает через команду «Перевести экран» на кнопке «Действие», AssistiveTouch или касании задней панели — подробнее в «Как начать».")
+                }
             }
             .navigationTitle("BYO Translate")
         }

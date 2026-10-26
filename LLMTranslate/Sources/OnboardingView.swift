@@ -12,12 +12,11 @@ import UIKit
 /// шаги, проверенные вживую на iOS 18.4: `Настройки → Приложения →
 /// Приложения по умолчанию → Перевод`.
 struct OnboardingView: View {
-    @State private var opensApp = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp ?? false
 
     /// Готовая команда «Сделать снимок экрана» → «Перевести на месте» → «Быстрый
     /// просмотр», опубликованная ссылкой iCloud: приложение не может поставить
     /// цепочку из чужих действий само, а ссылка добавляет её в одно касание.
-    static let translateScreenShortcutURL = URL(string: "https://www.icloud.com/shortcuts/726c2d0ecc3d408290d64c27c914a50e")!
+    static let translateScreenShortcutURL = URL(string: "https://www.icloud.com/shortcuts/874c8e7ccd7a4c1aaf9013acde45472f")!
 
     var body: some View {
         Form {
@@ -49,18 +48,7 @@ struct OnboardingView: View {
                 Button("Добавить команду «Перевести экран»") {
                     UIApplication.shared.open(Self.translateScreenShortcutURL)
                 }
-                Picker("Где показывать перевод", selection: $opensApp) {
-                    Text("Поверх текущего приложения").tag(false)
-                    Text("В BYO Translate").tag(true)
-                }
-                .onChange(of: opensApp) { _, newValue in
-                    LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp = newValue
-                }
-                Text(opensApp
-                     ? "Открывается BYO Translate: фрагменты по касанию, «Точнее», «Пояснить». Вернуться в прежнее приложение придётся самому."
-                     : "Весь экран плашками поверх текущего приложения; закрыли — вы там же, где были.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                ScreenTranslationModePicker()
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Затем повесьте её на удобную кнопку:")
                     Text("• Кнопка «Действие»: Настройки → Кнопка действия → Команда → «Перевести экран».")
@@ -118,5 +106,30 @@ struct OnboardingView: View {
             }
         }
         .navigationTitle("Как начать")
+    }
+}
+
+/// Где показывать перевод экрана (команда «Перевести экран»): общий для «Как
+/// начать» и главной страницы настроек, чтобы настройка не потерялась в инструкции.
+/// Сохраняется сразу; читается действием «Режим перевода экрана».
+struct ScreenTranslationModePicker: View {
+    @State private var opensApp = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp ?? false
+
+    var body: some View {
+        Picker("Где показывать перевод", selection: $opensApp) {
+            Text("Поверх текущего приложения").tag(false)
+            Text("В BYO Translate").tag(true)
+        }
+        .onChange(of: opensApp) { _, newValue in
+            LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp = newValue
+        }
+        .onAppear {
+            opensApp = LLMTranslateSettings(appGroupSuiteName: SharedIdentifiers.appGroup)?.screenTranslationOpensApp ?? false
+        }
+        Text(opensApp
+             ? "Открывается BYO Translate: фрагменты по касанию, «Точнее», «Пояснить». Вернуться в прежнее приложение придётся самому."
+             : "Весь экран плашками поверх текущего приложения; закрыли — вы там же, где были.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
     }
 }
