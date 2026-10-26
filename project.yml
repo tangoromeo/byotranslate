@@ -54,6 +54,8 @@ targets:
         embed: true
       - target: LLMTranslateControl
         embed: true
+      - target: LLMTranslateBroadcast
+        embed: true
       - target: LLMTranslateKit
         embed: true
     postbuildScripts:
@@ -66,6 +68,10 @@ targets:
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
           /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.translation-ui-provider.network-access" "$PLIST" 2>/dev/null
           /usr/libexec/PlistBuddy -c "Add :com.apple.developer.translation-ui-provider.network-access bool true" "$PLIST"
+          # B8: PiP для произвольного содержимого требует фоновый режим audio.
+          /usr/libexec/PlistBuddy -c "Delete :UIBackgroundModes" "$PLIST" 2>/dev/null
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string audio" "$PLIST"
       # Собственный баг этой сборки Xcode 26.6 (см. NOTES.md — тот же класс
       # проблем, что с `-destination`/`bundle.unit-test`): при сборке через
       # `xcodebuild -target ... build` (без `-scheme` — со схемой вообще не
@@ -227,6 +233,40 @@ targets:
       - target: LLMTranslateKit
         embed: false
         link: true
+
+  # B8: трансляция экрана → кольцо кадров в App Group (см. LLMTranslateBroadcast/Sources/SampleHandler.swift).
+  # Kit НЕ линкуется: лимит памяти расширения ~50 МБ, поэтому собираются только два маленьких файла.
+  LLMTranslateBroadcast:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LLMTranslateBroadcast/Sources
+      - path: LLMTranslateKit/Sources/Automation/FrameRingBuffer.swift
+      - path: LLMTranslateKit/Sources/Automation/LiveDebugLog.swift
+      - path: LLMTranslateKit/Sources/SharedIdentifiers.swift
+    info:
+      path: LLMTranslateBroadcast/Info.plist
+      properties:
+        CFBundleDisplayName: BYO Translate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.broadcast-services-upload
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SampleHandler
+          RPBroadcastProcessMode: RPBroadcastProcessModeSampleBuffer
+    entitlements:
+      path: LLMTranslateBroadcast/LLMTranslateBroadcast.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tyrex.llmtranslate
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.broadcast
+        PRODUCT_NAME: LLMTranslateBroadcast
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+        SKIP_INSTALL: true
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
 
   LLMTranslateControl:
     type: app-extension

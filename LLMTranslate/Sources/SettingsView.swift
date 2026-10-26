@@ -22,6 +22,9 @@ struct SettingsView: View {
                 NavigationLink("Отладка и расход") {
                     DebugAndUsageView(settings: settings)
                 }
+                NavigationLink("Живой режим (эксперимент)") {
+                    LiveModeView()
+                }
             }
             .navigationTitle("BYO Translate")
         }

@@ -33,6 +33,7 @@ struct ContentView: View {
                 }
             }
             .task {
+                LiveDebugLog.write("host: приложение запущено/показано")
                 pending.consumeHandoff(appGroupSuiteName: SharedIdentifiers.appGroup)
             }
     }
