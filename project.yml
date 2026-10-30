@@ -9,10 +9,10 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    MARKETING_VERSION: "0.1"
-    CURRENT_PROJECT_VERSION: "8"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "9"
     IPHONEOS_DEPLOYMENT_TARGET: "18.4"
-    TARGETED_DEVICE_FAMILY: "1,2"
+    TARGETED_DEVICE_FAMILY: "1"
     DEVELOPMENT_TEAM: 6X8WWWZ5AU
 
 targets:
@@ -34,6 +34,7 @@ targets:
           - $(AppIdentifierPrefix)com.tyrex.llmtranslate.shared
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate
         PRODUCT_NAME: LLMTranslate
         CODE_SIGN_STYLE: Automatic
@@ -144,6 +145,7 @@ targets:
           - $(AppIdentifierPrefix)com.tyrex.llmtranslate.shared
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.textext
         PRODUCT_NAME: LLMTranslateTextExt
         CODE_SIGN_STYLE: Automatic
@@ -205,6 +207,7 @@ targets:
           - $(AppIdentifierPrefix)com.tyrex.llmtranslate.shared
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.shareext
         PRODUCT_NAME: LLMTranslateShareExt
         CODE_SIGN_STYLE: Automatic
@@ -256,6 +259,7 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.control
         PRODUCT_NAME: LLMTranslateControl
         CODE_SIGN_STYLE: Automatic
@@ -292,6 +296,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.kit
         PRODUCT_NAME: LLMTranslateKit
         CODE_SIGN_STYLE: Automatic
@@ -316,6 +321,7 @@ targets:
       - path: LLMTranslateKitTests
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: com.tyrex.llmtranslate.kit.tests
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: true

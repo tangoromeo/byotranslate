@@ -58,25 +58,16 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
+                    // Вернуться в прежнее приложение у обычного приложения нет
+                    // публичного API; неофициальный приём с `suspend` убран перед
+                    // App Store (риск отказа по 2.5.1, к тому же не срабатывал).
+                    // Без ухода из приложения работает «Перевести на месте».
                     Button("Готово") {
                         pending.clear()
-                        returnToPreviousApp()
                     }
                 }
             }
         }
-    }
-
-    /// E2/E3 приводят приложение на передний план поверх того, что было
-    /// открыто до этого (раздел 10.4 ТЗ) — официального API «вернуться
-    /// туда, откуда пришёл» у обычного приложения нет (в отличие от Share
-    /// Extension, где `completeRequest()` делает это сам). Это
-    /// неофициальный, но широко используемый приём: `UIApplication`
-    /// отвечает на тот же по имени селектор, что и `URLSessionTask.suspend`
-    /// — вызов через `performSelector` сворачивает приложение так же, как
-    /// нажатие Home, открывая то, что было активно до нас.
-    private func returnToPreviousApp() {
-        UIControl().sendAction(#selector(URLSessionTask.suspend), to: UIApplication.shared, for: nil)
     }
 }
 
